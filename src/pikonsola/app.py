@@ -16,6 +16,7 @@ from .games.pacman import Pacman
 from .games.platformer import Platformer
 from .games.river import River
 from .games.snow_arena import SnowArena
+from .games.sokoban import Sokoban
 from .games.space_invaders import SpaceInvaders
 from .input import InputBackend, Key, create_input
 from .ui import frame, text
@@ -44,6 +45,7 @@ class ConsoleApp:
         self.selected = 0
         self.power_selected = 0
         self.games = [
+            ("SOKOBAN", Sokoban()),
             ("PLATFUS", Platformer()),
             ("SNIEZKA 3D", SnowArena()),
             ("NIBBLES", self.game),
