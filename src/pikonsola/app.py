@@ -12,6 +12,7 @@ import pygame
 from .config import COLORS, FPS, HEIGHT, WIDTH
 from .display import create_display, selected_display
 from .games.nibbles import Nibbles
+from .games.space_invaders import SpaceInvaders
 from .input import InputBackend, Key, create_input
 from .ui import frame, text
 
@@ -34,7 +35,7 @@ class ConsoleApp:
         self.running = True
         self.restart_requested = False
         self.selected = 0
-        self.games = [("NIBBLES", self.game)]
+        self.games = [("NIBBLES", self.game), ("INVADERS", SpaceInvaders())]
         self.update_process: Optional[subprocess.Popen] = None
         self.update_elapsed = 0.0
         self.update_ok = False
@@ -88,6 +89,7 @@ class ConsoleApp:
         if controls.just_pressed(Key.DOWN):
             self.selected = (self.selected + 1) % len(self.games)
         if controls.just_pressed(Key.A) or controls.just_pressed(Key.START):
+            self.game = self.games[self.selected][1]
             self.screen = Screen.GAME
         elif controls.just_pressed(Key.B):
             self.screen = Screen.UPDATE_CONFIRM

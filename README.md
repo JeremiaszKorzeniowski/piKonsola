@@ -1,7 +1,8 @@
 # piKonsola
 
 Minimalna konsola retro dla Raspberry Pi Zero W i ekranu Waveshare 1.44" LCD HAT
-(ST7735S, 128x128). Pierwsza wersja zawiera launcher oraz grę **Nibbles**.
+(ST7735S, 128x128). Konsola zawiera launcher oraz gry **Nibbles** i
+**Invaders** (klon klasycznego Space Invaders).
 Na Raspberry Pi obraz jest wysyłany bezpośrednio do LCD przez SPI — projekt nie
 wymaga starego sterownika `fbcp` ani środowiska graficznego.
 
@@ -14,6 +15,9 @@ wymaga starego sterownika `fbcp` ani środowiska graficznego.
 | KEY1 | Z | A |
 | KEY2 | X | B / powrót |
 | KEY3 | Escape | menu konsoli |
+
+W Invaders joystick służy do ruchu w lewo i prawo, a `KEY1` lub kliknięcie
+joysticka wystrzeliwuje pocisk.
 
 Przytrzymanie `KEY3` przez 1,5 sekundy wraca z gry do launchera. W launcherze
 `KEY3` otwiera ekran wyłączenia, a `KEY2` ekran aktualizacji.
