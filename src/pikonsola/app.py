@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import os
-import platform
 import subprocess
 from enum import Enum, auto
 
 import pygame
 
-from .config import COLORS, FPS, HEIGHT, WIDTH, window_scale
+from .config import COLORS, FPS, HEIGHT, WIDTH
+from .display import create_display, selected_display
 from .games.nibbles import Nibbles
 from .input import InputBackend, Key, create_input
 from .ui import frame, text
@@ -85,23 +85,13 @@ class ConsoleApp:
         text(self.canvas, "B: NIE", 71, 87, color=COLORS.accent, size=9, bold=True)
 
 
-def _create_window() -> tuple[pygame.Surface, bool]:
-    fullscreen = os.getenv("PIKONSOLA_FULLSCREEN", "auto").lower()
-    is_framebuffer = platform.system() == "Linux" and (
-        bool(os.getenv("SDL_FBDEV")) or not os.getenv("DISPLAY")
-    )
-    use_fullscreen = fullscreen == "1" or (fullscreen == "auto" and is_framebuffer)
-    if use_fullscreen:
-        window = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-        return window, window.get_size() == (WIDTH, HEIGHT)
-    scale = window_scale()
-    return pygame.display.set_mode((WIDTH * scale, HEIGHT * scale)), False
-
-
 def main() -> None:
-    pygame.init()
-    pygame.display.set_caption("piKonsola")
-    window, native_size = _create_window()
+    display_kind = selected_display()
+    if display_kind == "spi":
+        os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    pygame.display.init()
+    pygame.font.init()
+    output = create_display(display_kind)
     controls = create_input()
     app = ConsoleApp(controls)
     clock = pygame.time.Clock()
@@ -109,13 +99,9 @@ def main() -> None:
         while app.running:
             dt = min(clock.tick(FPS) / 1000.0, 0.1)
             app.update(dt)
-            canvas = app.draw()
-            if native_size:
-                window.blit(canvas, (0, 0))
-            else:
-                pygame.transform.scale(canvas, window.get_size(), window)
-            pygame.display.flip()
+            output.present(app.draw())
     finally:
         controls.close()
+        output.close()
         pygame.quit()
 

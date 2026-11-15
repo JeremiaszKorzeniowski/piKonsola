@@ -2,6 +2,8 @@
 
 Minimalna konsola retro dla Raspberry Pi Zero W i ekranu Waveshare 1.44" LCD HAT
 (ST7735S, 128x128). Pierwsza wersja zawiera launcher oraz grę **Nibbles**.
+Na Raspberry Pi obraz jest wysyłany bezpośrednio do LCD przez SPI — projekt nie
+wymaga starego sterownika `fbcp` ani środowiska graficznego.
 
 ## Sterowanie
 
@@ -32,18 +34,21 @@ Program wyświetla powiększone okno, ale zawsze rysuje w rozdzielczości 128x12
 
 ## Instalacja na Raspberry Pi
 
-Zalecany jest Raspberry Pi OS Lite 32-bit. Najpierw włącz SPI przez
-`sudo raspi-config` (`Interface Options` -> `SPI`). Sterownik Waveshare/fbcp musi
-być skonfigurowany osobno zgodnie z dokumentacją ekranu tak, aby pulpit/framebuffer
-był widoczny na LCD.
+Zalecany jest aktualny Raspberry Pi OS Lite 32-bit. Włącz SPI i zainstaluj pakiety:
 
 ```bash
+sudo raspi-config nonint do_spi 0
 sudo apt update
-sudo apt install -y python3-pygame python3-gpiozero python3-lgpio git
-git clone <adres-repozytorium> /home/pi/piKonsola
+sudo apt install -y git python3-pygame python3-gpiozero python3-rpi-lgpio \
+  python3-pil python3-luma.lcd python3-spidev
+git clone https://github.com/JeremiaszKorzeniowski/piKonsola.git /home/pi/piKonsola
 cd /home/pi/piKonsola
-PYTHONPATH=src python3 -m pikonsola
+PIKONSOLA_DISPLAY=spi PYTHONPATH=src python3 -m pikonsola
 ```
+
+Po ostatnim poleceniu na LCD powinien pojawić się launcher. Zatrzymaj test przez
+`Ctrl+C`. Jeśli obraz jest obrócony, uruchom test ponownie z wartością
+`PIKONSOLA_ROTATE=1`, `2` albo `3`.
 
 Program sam rozpoznaje Raspberry Pi i używa wejść GPIO. Mapowanie pinów BCM:
 
@@ -54,6 +59,12 @@ Można wymusić tryb klawiatury poleceniem:
 
 ```bash
 PIKONSOLA_INPUT=keyboard python3 -m pikonsola
+```
+
+Na komputerze można jawnie wymusić zwykłe okno:
+
+```bash
+PIKONSOLA_DISPLAY=window python3 -m pikonsola
 ```
 
 ## Autostart
