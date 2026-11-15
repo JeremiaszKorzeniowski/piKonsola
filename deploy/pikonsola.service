@@ -1,0 +1,18 @@
+[Unit]
+Description=piKonsola
+After=local-fs.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/piKonsola
+Environment=PYTHONPATH=/home/pi/piKonsola/src
+Environment=PIKONSOLA_INPUT=auto
+Environment=PIKONSOLA_FULLSCREEN=1
+ExecStart=/usr/bin/python3 -m pikonsola
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
+

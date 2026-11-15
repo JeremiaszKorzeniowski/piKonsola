@@ -1,0 +1,2 @@
+"""Gry dołączone do piKonsoli."""
+
