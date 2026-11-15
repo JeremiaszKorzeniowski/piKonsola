@@ -50,21 +50,24 @@ class ConsoleApp:
         self.restart_requested = False
         self.selected = 0
         self.power_selected = 0
-        self.games = [
-            ("SOKOBAN", Sokoban()),
-            ("SKOCZEK", KnightTour()),
-            ("PLATFUS", Platformer()),
-            ("SNIEZKA 3D", SnowArena()),
-            ("NIBBLES", self.game),
-            ("INVADERS", SpaceInvaders()),
-            ("ASTEROIDS", Asteroids()),
-            ("DEFENDER", Defender()),
-            ("PAC-MAN", Pacman()),
-            ("RIVER", River()),
-            ("CZOLGI", Tanks()),
-            ("TETRIS", Tetris()),
-            ("ARKANOID", Arkanoid()),
-        ]
+        self.games = sorted(
+            [
+                ("SOKOBAN", Sokoban()),
+                ("SKOCZEK", KnightTour()),
+                ("PLATFUS", Platformer()),
+                ("SNIEZKA 3D", SnowArena()),
+                ("NIBBLES", self.game),
+                ("INVADERS", SpaceInvaders()),
+                ("ASTEROIDS", Asteroids()),
+                ("DEFENDER", Defender()),
+                ("PAC-MAN", Pacman()),
+                ("RIVER", River()),
+                ("CZOLGI", Tanks()),
+                ("TETRIS", Tetris()),
+                ("ARKANOID", Arkanoid()),
+            ],
+            key=lambda entry: entry[0].casefold(),
+        )
         self.update_process: Optional[subprocess.Popen] = None
         self.update_elapsed = 0.0
         self.update_ok = False

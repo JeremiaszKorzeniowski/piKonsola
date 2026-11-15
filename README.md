@@ -1,120 +1,61 @@
 # piKonsola
 
-Minimalna konsola retro dla Raspberry Pi Zero W i ekranu Waveshare 1.44" LCD HAT
-(ST7735S, 128x128). Konsola zawiera launcher oraz gry **Nibbles**,
-**Invaders** (klon klasycznego Space Invaders), **Pac-Man** i spokojna gra
-**River** inspirowana River Raid, **Sokoban** — logiczne przesuwanie skrzyń,
-**Skoczek** — interaktywna wędrówka skoczka po całej szachownicy,
-**Platfus** — prosta platformówka oraz
-**Śnieżka 3D** — zimowa strzelanka FPP w stylu Wolfenstein 3D.
-W **Czołgach** bronisz bazy w uproszczonej grze inspirowanej Battle City.
-**Tetris** oferuje klasyczną planszę 10×20, siedem rodzajów klocków, kolejne
-poziomy i podgląd następnego elementu. **Asteroids** to klasyczna walka w
-przestrzeni z rozpadającymi się skałami, bezwładnością i zawijaniem ekranu.
-**Arkanoid** pozwala odbijać piłkę paletką, kruszyć kolorową ścianę i przechodzić
-coraz szybsze poziomy.
-**Defender** to szybka strzelanka z przewijanym światem, radarem i lądownikami,
-które próbują porwać ludzi z powierzchni planety.
-Na Raspberry Pi obraz jest wysyłany bezpośrednio do LCD przez SPI — projekt nie
-wymaga starego sterownika `fbcp` ani środowiska graficznego.
+Minimalna konsola retro dla Raspberry Pi Zero W i ekranu Waveshare 1.44" LCD
+HAT (ST7735S, 128×128). Obraz jest wysyłany bezpośrednio do LCD przez SPI —
+projekt nie wymaga `fbcp` ani środowiska graficznego.
+
+## Gry
+
+Launcher wyświetla gry alfabetycznie. Obecnie dostępne są:
+
+| Gra | Opis |
+|---|---|
+| Arkanoid | Odbijanie piłki, niszczenie kolorowych klocków i coraz szybsze poziomy. |
+| Asteroids | Walka z rozpadającymi się asteroidami, bezwładność i zawijanie ekranu. |
+| Czołgi | Obrona bazy w grze inspirowanej Battle City. |
+| Defender | Strzelanka z przewijanym światem, radarem i ratowaniem ludzi. |
+| Invaders | Klon klasycznego Space Invaders. |
+| Nibbles | Klasyczny wąż zbierający jedzenie. |
+| Pac-Man | Zbieranie punktów w labiryncie i ucieczka przed duchami. |
+| Platfus | Platformówka z kluczem, przeszkodami i trzema poziomami. |
+| River | Lot nad rzeką, paliwo, przeszkody i mosty do zniszczenia. |
+| Skoczek | Wędrówka skoczka po całej szachownicy bez powtarzania pól. |
+| Śnieżka 3D | Zimowa strzelanka FPP w stylu Wolfenstein 3D. |
+| Sokoban | Logiczne przesuwanie skrzyń na wyznaczone cele. |
+| Tetris | Plansza 10×20, siedem rodzajów klocków, poziomy i podgląd kolejnego elementu. |
 
 ## Sterowanie
 
-| HAT | Klawiatura testowa | Funkcja |
-|---|---|---|
-| joystick | strzałki | ruch / wybór |
-| wciśnięcie joysticka | Enter | start / zatwierdź |
-| KEY1 | Z | A |
-| KEY2 | X | B / powrót |
-| KEY3 | Escape | menu konsoli |
+| HAT | Klawiatura testowa | Pad Xbox | Funkcja |
+|---|---|---|---|
+| joystick | strzałki | lewy drążek / D-pad | ruch lub wybór |
+| wciśnięcie joysticka | Enter | Start | start lub zatwierdzenie |
+| KEY1 | Z | A | główna akcja |
+| KEY2 | X | B | druga akcja lub powrót |
+| KEY3 | Escape | Back / View | menu konsoli |
 
-Obsługiwany jest również pad Xbox podłączony przez USB: lewy drążek lub D-pad
-steruje ruchem, `A` zatwierdza, `B` wraca, `Start` uruchamia grę, a
-`Back`/`View` otwiera menu. Na Raspberry Pi pad działa równolegle z przyciskami
-HAT-a.
+Pad USB działa równolegle z przyciskami HAT-a. Przytrzymanie `KEY3` przez
+1,5 sekundy wraca z gry do launchera. W launcherze `KEY2` otwiera ekran
+aktualizacji, a `KEY3` — menu zasilania.
 
-Po pierwszym dodaniu obsługi pada trzeba ponownie zainstalować plik usługi, aby
-proces dostał dostęp do grupy urządzeń `input`:
+### Sterowanie w grach
 
-```bash
-cd /home/pi/piKonsola
-bash deploy/install-service.sh
-```
-
-Wykrycie pada można sprawdzić w dzienniku:
-
-```bash
-journalctl -u pikonsola.service -n 30 --no-pager | grep "pad USB"
-```
-
-W Invaders joystick służy do ruchu w lewo i prawo, a `KEY1` lub kliknięcie
-joysticka wystrzeliwuje pocisk.
-
-W Asteroids joystick w lewo i prawo obraca statek, w górę uruchamia silnik,
-a w dół hamuje. `KEY1` lub kliknięcie joysticka strzela. Duże asteroidy po
-trafieniu rozpadają się na dwie mniejsze; po oczyszczeniu ekranu zaczyna się
-trudniejsza fala.
-
-W Czołgach joystick porusza pojazdem w czterech kierunkach, a `KEY1` lub
-kliknięcie joysticka strzela w kierunku jazdy. Zniszcz trzy czerwone czołgi,
-zanim przeciwnicy trafią gracza trzy razy albo zniszczą zieloną bazę. Ceglane
-ściany można rozbić pociskiem, a szare bloki są niezniszczalne.
-
-W Tetrisie joystick w lewo i prawo przesuwa klocek, w dół przyspiesza jego
-opadanie, a w górę lub `KEY1` obraca. `KEY2` wykonuje natychmiastowy twardy
-zrzut. Pełne linie znikają, a co dziesięć linii rośnie poziom i prędkość gry.
-
-W Arkanoidzie joystick w lewo i prawo przesuwa paletkę. `KEY1` lub kliknięcie
-joysticka wypuszcza piłkę. Oczyść wszystkie klocki, aby przejść na szybszy
-poziom; po utracie trzech piłek gra się kończy.
-
-W Defenderze joystick porusza statkiem w czterech kierunkach. `KEY1` lub
-kliknięcie joysticka strzela w kierunku lotu. Zniszcz lądowniki, zanim uniosą
-ludzi poza ekran; po udanym porwaniu przeciwnik zmienia się w szybkiego mutanta.
-Radar u góry pokazuje położenie statku, ludzi i wrogów w całym świecie.
-
-W Sokobanie joystick przesuwa magazyniera o jedno pole. Popchnij wszystkie
-skrzynie na żółte cele; skrzyń nie można ciągnąć. `KEY2` resetuje bieżącą
-planszę. Trzy poziomy są osobnymi plikami w katalogu
-`src/pikonsola/games/sokoban_levels`.
-
-W Skoczku zaczynasz na polu A1. D-pad lub joystick przełącza podświetlone
-legalne cele, a `KEY1`, `A` albo kliknięcie joysticka zatwierdza skok.
-Odwiedzone pola stają się ciemnoszare. Wejście drugi raz na to samo pole kończy
-partię, a odwiedzenie wszystkich 64 pól oznacza zwycięstwo. `KEY2` resetuje
-partię w trakcie gry.
-
-W River joystick steruje samolotem nad prostą rzeką. Omijaj skały i łodzie,
-zbieraj zielone kanistry paliwa i niszcz mosty. Po każdym moście pojawia się
-trochę więcej obiektów. `KEY1` lub kliknięcie joysticka wystrzeliwuje pocisk.
-
-W Platfusie joystick w lewo i prawo porusza bohaterem. `KEY1`, joystick w górę
-lub kliknięcie joysticka wykonuje skok. Wskakuj na platformy, znajdź klucz,
-omiń kolce i przeciwników, a potem dotrzyj
-do drzwi. Masz trzy życia. Poziomy znajdują się jako osobne pliki w katalogu
-`src/pikonsola/games/platformer_levels`; plik o nazwie `level_*.py` jest
-automatycznie dodawany do gry.
-
-W Śnieżce 3D góra/dół porusza postacią, lewo/prawo obraca widok, a `KEY1`
-lub kliknięcie joysticka rzuca śnieżką. Na arenie zawsze grasuje dwóch
-przeciwników; po trafieniu jednego pojawia się następny. Bałwany, igloo i sanki
-są przeszkodami. Walka trwa aż pięć trafień skuje gracza. Mapy aren znajdują
-się w `src/pikonsola/games/snow_arena_levels`.
-
-Przytrzymanie `KEY3` przez 1,5 sekundy wraca z gry do launchera. W launcherze
-`KEY3` otwiera menu zasilania z opcjami wyłączenia, restartu i powrotu, a
-`KEY2` ekran aktualizacji.
-
-## Aktualizacja z menu
-
-W launcherze naciśnij `KEY2`, a następnie potwierdź przez `KEY1` lub klik
-joysticka. Konsola wykonuje bezpieczne `git pull --ff-only origin main`, więc nie
-nadpisze lokalnych zmian. Po udanym pobraniu aplikacja sama uruchamia się ponownie.
-Przy błędzie szczegóły trafiają do dziennika usługi:
-
-```bash
-journalctl -u pikonsola.service -n 50 --no-pager
-```
+- **Arkanoid:** lewo/prawo przesuwa paletkę; `KEY1` wypuszcza piłkę.
+- **Asteroids:** lewo/prawo obraca statek, góra uruchamia silnik, dół hamuje;
+  `KEY1` strzela.
+- **Czołgi:** joystick porusza pojazdem, a `KEY1` strzela w kierunku jazdy.
+- **Defender:** joystick porusza statkiem, a `KEY1` strzela w kierunku lotu.
+- **Invaders:** lewo/prawo porusza działkiem; `KEY1` strzela.
+- **Platfus:** lewo/prawo porusza bohaterem; góra, `KEY1` lub kliknięcie
+  joysticka wykonuje skok.
+- **River:** joystick steruje samolotem; `KEY1` strzela.
+- **Skoczek:** joystick wybiera legalny cel; `KEY1` zatwierdza skok, a `KEY2`
+  resetuje partię.
+- **Śnieżka 3D:** góra/dół porusza postacią, lewo/prawo obraca widok;
+  `KEY1` rzuca śnieżką.
+- **Sokoban:** joystick przesuwa magazyniera; `KEY2` resetuje planszę.
+- **Tetris:** lewo/prawo przesuwa klocek, dół przyspiesza opadanie, a góra lub
+  `KEY1` obraca; `KEY2` wykonuje twardy zrzut.
 
 ## Uruchomienie na komputerze
 
@@ -127,11 +68,16 @@ pip install -r requirements-dev.txt
 python -m pikonsola
 ```
 
-Program wyświetla powiększone okno, ale zawsze rysuje w rozdzielczości 128x128.
+Program otwiera powiększone okno, ale zawsze rysuje obraz w rozdzielczości
+128×128. Tryb zwykłego okna można wymusić poleceniem:
+
+```bash
+PIKONSOLA_DISPLAY=window python3 -m pikonsola
+```
 
 ## Instalacja na Raspberry Pi
 
-Zalecany jest aktualny Raspberry Pi OS Lite 32-bit. Włącz SPI i zainstaluj pakiety:
+Zalecany jest aktualny Raspberry Pi OS Lite 32-bit.
 
 ```bash
 sudo raspi-config nonint do_spi 0
@@ -143,54 +89,80 @@ cd /home/pi/piKonsola
 PIKONSOLA_DISPLAY=spi PYTHONPATH=src python3 -m pikonsola
 ```
 
-Po ostatnim poleceniu na LCD powinien pojawić się launcher. Zatrzymaj test przez
-`Ctrl+C`. Jeśli obraz jest obrócony, uruchom test ponownie z wartością
-`PIKONSOLA_ROTATE=1`, `2` albo `3`.
+Po uruchomieniu launcher powinien pojawić się na LCD. Test można zatrzymać
+przez `Ctrl+C`. Jeśli obraz jest obrócony, ustaw `PIKONSOLA_ROTATE` na `1`, `2`
+lub `3`.
 
-Program sam rozpoznaje Raspberry Pi i używa wejść GPIO. Mapowanie pinów BCM:
+Program sam rozpoznaje Raspberry Pi i korzysta z wejść GPIO. Mapowanie pinów
+BCM:
 
-- joystick: góra 6, dół 19, lewo 5, prawo 26, klik 13,
+- joystick: góra 6, dół 19, lewo 5, prawo 26, klik 13;
 - KEY1 21, KEY2 20, KEY3 16.
 
-Można wymusić tryb klawiatury poleceniem:
+Tryb klawiatury można wymusić poleceniem:
 
 ```bash
 PIKONSOLA_INPUT=keyboard python3 -m pikonsola
 ```
 
-Na komputerze można jawnie wymusić zwykłe okno:
-
-```bash
-PIKONSOLA_DISPLAY=window python3 -m pikonsola
-```
-
 ## Autostart
 
-Po skopiowaniu projektu do `/home/pi/piKonsola`:
+Po skopiowaniu projektu do `/home/pi/piKonsola` uruchom:
 
 ```bash
 bash deploy/install-service.sh
 ```
 
-Instalator włącza autostart na wcześniejszym etapie `basic.target`, instaluje
-ograniczoną regułę bezpiecznego wyłączania i uruchamia usługę ponownie. Zakłada
-użytkownika `pi`. Jeżeli system ma inną nazwę użytkownika, trzeba zmienić pola
-`User`, `WorkingDirectory` i `ExecStart` w usłudze oraz użytkownika w pliku
-`deploy/pikonsola-sudoers`.
+Instalator zakłada użytkownika `pi`, włącza usługę na etapie `basic.target`
+i instaluje ograniczoną regułę bezpiecznego wyłączania. Przy innej nazwie
+użytkownika zmień pola `User`, `WorkingDirectory` i `ExecStart` w
+`deploy/pikonsola.service` oraz użytkownika w `deploy/pikonsola-sudoers`.
+
+Po pierwszym dodaniu obsługi pada ponownie uruchom instalator, aby proces dostał
+dostęp do grupy urządzeń `input`. Wykrycie pada można sprawdzić poleceniem:
+
+```bash
+journalctl -u pikonsola.service -n 30 --no-pager | grep "pad USB"
+```
+
+## Aktualizacja z menu
+
+W launcherze naciśnij `KEY2` i potwierdź przez `KEY1` lub kliknięcie joysticka.
+Konsola wykona `git pull --ff-only origin main`, więc nie nadpisze lokalnych
+zmian. Po udanej aktualizacji aplikacja uruchomi się ponownie.
+
+W razie błędu sprawdź dziennik usługi:
+
+```bash
+journalctl -u pikonsola.service -n 50 --no-pager
+```
 
 ## Bezpieczne wyłączanie
 
-Instalator usługi pozwala launcherowi uruchamiać wyłącznie dwa polecenia
-administracyjne — `/usr/sbin/poweroff` i `/usr/sbin/reboot`. Naciśnij `KEY3`
-w launcherze, wybierz działanie góra/dół, a następnie potwierdź przez `KEY1`
-albo klik joysticka.
-
-Zainstalowana reguła sudoers ma postać:
+Menu otwierane przez `KEY3` pozwala wyłączyć lub zrestartować urządzenie.
+Instalator nadaje aplikacji prawo wyłącznie do tych dwóch poleceń:
 
 ```text
 pi ALL=(root) NOPASSWD: /usr/sbin/poweroff, /usr/sbin/reboot
 ```
 
-Nie odłączaj zasilania, dopóki zielona dioda aktywności karty microSD nie przestanie
-migać.
+Nie odłączaj zasilania, dopóki zielona dioda aktywności karty microSD nie
+przestanie migać.
 
+## Rozwój i testy
+
+Nową grę dodaje się do listy `self.games` w `src/pikonsola/app.py`. Launcher
+sortuje wpisy automatycznie według wyświetlanej nazwy, więc położenia nowego
+tytułu nie trzeba ustawiać ręcznie.
+
+Poziomy gier są przechowywane osobno:
+
+- `src/pikonsola/games/platformer_levels/level_*.py` — Platfus;
+- `src/pikonsola/games/snow_arena_levels/` — Śnieżka 3D;
+- `src/pikonsola/games/sokoban_levels/` — Sokoban.
+
+Uruchomienie testów:
+
+```bash
+pytest
+```

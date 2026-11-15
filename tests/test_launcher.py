@@ -20,6 +20,14 @@ class Controls:
         pass
 
 
+def test_launcher_sorts_games_alphabetically() -> None:
+    app = ConsoleApp(Controls())
+
+    names = [name for name, _ in app.games]
+
+    assert names == sorted(names, key=str.casefold)
+
+
 def test_launcher_scrolls_window_to_keep_selection_visible() -> None:
     app = ConsoleApp(Controls())
     app.games.extend((f"GRA {number}", object()) for number in range(4))
