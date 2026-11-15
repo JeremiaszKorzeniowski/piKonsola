@@ -9,7 +9,7 @@ HEIGHT = 128
 FPS = 30
 
 
-@dataclass(frozen=True)
+@dataclass
 class Palette:
     background: tuple[int, int, int] = (9, 12, 18)
     panel: tuple[int, int, int] = (21, 28, 39)
@@ -21,7 +21,25 @@ class Palette:
     food: tuple[int, int, int] = (255, 196, 74)
 
 
+NIGHT_PALETTE = Palette()
+DAY_PALETTE = Palette(
+    background=(232, 239, 234),
+    panel=(207, 220, 213),
+    text=(18, 29, 27),
+    muted=(76, 98, 91),
+    accent=(0, 112, 72),
+    accent_dark=(137, 190, 162),
+    danger=(178, 42, 42),
+    food=(166, 104, 0),
+)
 COLORS = Palette()
+
+
+def set_color_mode(mode: str) -> None:
+    """Change the shared palette without invalidating imports in game modules."""
+    source = DAY_PALETTE if mode == "day" else NIGHT_PALETTE
+    for name in Palette.__dataclass_fields__:
+        setattr(COLORS, name, getattr(source, name))
 
 
 def window_scale() -> int:

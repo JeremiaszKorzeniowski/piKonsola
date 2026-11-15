@@ -18,11 +18,13 @@ def text(
     x: int,
     y: int,
     *,
-    color: tuple[int, int, int] = COLORS.text,
+    color: tuple[int, int, int] | None = None,
     size: int = 10,
     center: bool = False,
     bold: bool = False,
 ) -> pygame.Rect:
+    if color is None:
+        color = COLORS.text
     image = pixel_font(size, bold).render(value, False, color)
     rect = image.get_rect()
     if center:

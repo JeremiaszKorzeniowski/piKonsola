@@ -36,8 +36,8 @@ Launcher wyświetla gry alfabetycznie. Obecnie dostępne są:
 | KEY3 | Escape | Back / View | menu konsoli |
 
 Pad USB działa równolegle z przyciskami HAT-a. Przytrzymanie `KEY3` przez
-1,5 sekundy wraca z gry do launchera. W launcherze `KEY2` otwiera ekran
-aktualizacji, a `KEY3` — menu zasilania.
+1,5 sekundy wraca z gry do launchera. W launcherze `KEY2` przełącza tryb
+dzienny/nocny, a `KEY3` otwiera menu konsoli.
 
 ### Sterowanie w grach
 
@@ -129,9 +129,10 @@ journalctl -u pikonsola.service -n 30 --no-pager | grep "pad USB"
 
 ## Aktualizacja z menu
 
-W launcherze naciśnij `KEY2` i potwierdź przez `KEY1` lub kliknięcie joysticka.
-Konsola wykona `git pull --ff-only origin main`, więc nie nadpisze lokalnych
-zmian. Po udanej aktualizacji aplikacja uruchomi się ponownie.
+W launcherze naciśnij `KEY3`, wybierz pozycję `AKTUALIZACJA` i potwierdź przez
+`KEY1` lub kliknięcie joysticka. Konsola wykona `git pull --ff-only origin
+main`, więc nie nadpisze lokalnych zmian. Po udanej aktualizacji aplikacja
+uruchomi się ponownie.
 
 W razie błędu sprawdź dziennik usługi:
 
@@ -141,7 +142,8 @@ journalctl -u pikonsola.service -n 50 --no-pager
 
 ## Bezpieczne wyłączanie
 
-Menu otwierane przez `KEY3` pozwala wyłączyć lub zrestartować urządzenie.
+Menu otwierane przez `KEY3` pozwala wyłączyć, zrestartować lub zaktualizować
+urządzenie.
 Instalator nadaje aplikacji prawo wyłącznie do tych dwóch poleceń:
 
 ```text

@@ -40,8 +40,19 @@ def test_power_menu_return_option_goes_to_launcher() -> None:
     controls = Controls()
     app = ConsoleApp(controls)
     app.screen = Screen.POWER
-    app.power_selected = 2
+    app.power_selected = 3
     controls.press(Key.A)
     app.update(0.01)
     assert app.screen is Screen.LAUNCHER
     assert app.running
+
+
+def test_power_menu_wraps_over_four_options() -> None:
+    controls = Controls()
+    app = ConsoleApp(controls)
+    app.screen = Screen.POWER
+
+    controls.press(Key.UP)
+    app.update(0.01)
+
+    assert app.power_selected == 3

@@ -30,10 +30,12 @@ class FinishedProcess:
         return ("Already up to date.\n", None)
 
 
-def test_key2_opens_update_question() -> None:
+def test_update_option_in_key3_menu_opens_update_question() -> None:
     controls = Controls()
     app = ConsoleApp(controls)
-    controls.press(Key.B)
+    app.screen = Screen.POWER
+    app.power_selected = 2
+    controls.press(Key.A)
     app.update(0.01)
     assert app.screen is Screen.UPDATE_CONFIRM
 

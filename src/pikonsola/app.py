@@ -9,7 +9,7 @@ from typing import Optional
 
 import pygame
 
-from .config import COLORS, FPS, HEIGHT, WIDTH
+from .config import COLORS, FPS, HEIGHT, WIDTH, set_color_mode
 from .display import create_display, selected_display
 from .games.arkanoid import Arkanoid
 from .games.asteroids import Asteroids
@@ -51,6 +51,8 @@ class ConsoleApp:
         self.restart_requested = False
         self.selected = 0
         self.power_selected = 0
+        self.color_mode = "night"
+        set_color_mode(self.color_mode)
         self.games = sorted(
             [
                 ("SOKOBAN", Sokoban()),
@@ -88,11 +90,13 @@ class ConsoleApp:
             if controls.just_pressed(Key.B) or controls.just_pressed(Key.MENU):
                 self.screen = Screen.LAUNCHER
             elif controls.just_pressed(Key.UP):
-                self.power_selected = (self.power_selected - 1) % 3
+                self.power_selected = (self.power_selected - 1) % 4
             elif controls.just_pressed(Key.DOWN):
-                self.power_selected = (self.power_selected + 1) % 3
+                self.power_selected = (self.power_selected + 1) % 4
             elif controls.just_pressed(Key.A) or controls.just_pressed(Key.START):
                 if self.power_selected == 2:
+                    self.screen = Screen.UPDATE_CONFIRM
+                elif self.power_selected == 3:
                     self.screen = Screen.LAUNCHER
                 else:
                     self.running = False
@@ -134,7 +138,8 @@ class ConsoleApp:
             self.game = self.games[self.selected][1]
             self.screen = Screen.GAME
         elif controls.just_pressed(Key.B):
-            self.screen = Screen.UPDATE_CONFIRM
+            self.color_mode = "day" if self.color_mode == "night" else "night"
+            set_color_mode(self.color_mode)
         elif controls.just_pressed(Key.MENU):
             self.power_selected = 0
             self.screen = Screen.POWER
@@ -205,9 +210,10 @@ class ConsoleApp:
             pygame.draw.polygon(self.canvas, COLORS.muted, ((115, 27), (119, 27), (117, 23)))
         if first + LAUNCHER_VISIBLE_GAMES < len(self.games):
             pygame.draw.polygon(self.canvas, COLORS.muted, ((115, 91), (119, 91), (117, 95)))
-        text(self.canvas, "KEY2: AKTUALIZACJA", 7, 97, color=COLORS.food, size=8)
+        next_mode = "DZIEN" if self.color_mode == "night" else "NOC"
+        text(self.canvas, f"KEY2: TRYB {next_mode}", 7, 97, color=COLORS.food, size=8)
         text(self.canvas, "A: GRAJ", 7, 106, color=COLORS.accent, size=9)
-        text(self.canvas, "MENU: OFF", 69, 106, color=COLORS.muted, size=9)
+        text(self.canvas, "KEY3: MENU", 69, 106, color=COLORS.muted, size=9)
 
     def _launcher_window_start(self) -> int:
         """Keep the selected game visible without compressing the menu rows."""
@@ -220,16 +226,16 @@ class ConsoleApp:
         )
 
     def _draw_power(self) -> None:
-        frame(self.canvas, "ZASILANIE")
-        options = ("WYLACZ", "RESTART", "POWROT")
+        frame(self.canvas, "MENU KEY3")
+        options = ("WYLACZ", "RESTART", "AKTUALIZACJA", "POWROT")
         for index, label in enumerate(options):
-            y = 31 + index * 22
+            y = 27 + index * 18
             if index == self.power_selected:
                 pygame.draw.rect(self.canvas, COLORS.accent_dark, (17, y - 3, 94, 17))
                 text(self.canvas, ">", 22, y, color=COLORS.food, size=9, bold=True)
             color = COLORS.danger if index < 2 else COLORS.accent
             text(self.canvas, label, WIDTH // 2, y, color=color, size=10, center=True, bold=index == self.power_selected)
-        text(self.canvas, "A: OK  B: POWROT", WIDTH // 2, 105, color=COLORS.muted, size=7, center=True)
+        text(self.canvas, "KEY1: OK  KEY2: POWROT", WIDTH // 2, 105, color=COLORS.muted, size=7, center=True)
 
     def _draw_update_confirm(self) -> None:
         frame(self.canvas, "AKTUALIZACJA")
