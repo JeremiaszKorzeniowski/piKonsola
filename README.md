@@ -14,6 +14,7 @@ Launcher wyświetla gry alfabetycznie. Obecnie dostępne są:
 | Asteroids | Walka z rozpadającymi się asteroidami, bezwładność i zawijanie ekranu. |
 | Czołgi | Obrona bazy w grze inspirowanej Battle City. |
 | Defender | Strzelanka z przewijanym światem, radarem i ratowaniem ludzi. |
+| Dino | Prosty klon gry z Chrome: bieg, skoki przez kaktusy i coraz szybsze tempo. |
 | Invaders | Klon klasycznego Space Invaders. |
 | Nibbles | Klasyczny wąż zbierający jedzenie. |
 | Pac-Man | Zbieranie punktów w labiryncie i ucieczka przed duchami. |
@@ -45,6 +46,7 @@ aktualizacji, a `KEY3` — menu zasilania.
   `KEY1` strzela.
 - **Czołgi:** joystick porusza pojazdem, a `KEY1` strzela w kierunku jazdy.
 - **Defender:** joystick porusza statkiem, a `KEY1` strzela w kierunku lotu.
+- **Dino:** góra, `KEY1` lub kliknięcie joysticka rozpoczyna grę i wykonuje skok.
 - **Invaders:** lewo/prawo porusza działkiem; `KEY1` strzela.
 - **Platfus:** lewo/prawo porusza bohaterem; góra, `KEY1` lub kliknięcie
   joysticka wykonuje skok.

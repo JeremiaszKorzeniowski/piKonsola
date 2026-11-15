@@ -14,6 +14,7 @@ from .display import create_display, selected_display
 from .games.arkanoid import Arkanoid
 from .games.asteroids import Asteroids
 from .games.defender import Defender
+from .games.dino import Dino
 from .games.knight_tour import KnightTour
 from .games.nibbles import Nibbles
 from .games.pacman import Pacman
@@ -60,6 +61,7 @@ class ConsoleApp:
                 ("INVADERS", SpaceInvaders()),
                 ("ASTEROIDS", Asteroids()),
                 ("DEFENDER", Defender()),
+                ("DINO", Dino()),
                 ("PAC-MAN", Pacman()),
                 ("RIVER", River()),
                 ("CZOLGI", Tanks()),
