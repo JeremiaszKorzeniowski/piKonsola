@@ -17,8 +17,8 @@ from . import platformer_levels
 
 PLAYER_WIDTH = 8
 PLAYER_HEIGHT = 10
-RUN_SPEED = 34.0
-JUMP_SPEED = 82.0
+MOVE_SPEED = 42.0
+JUMP_SPEED = 105.0
 GRAVITY = 220.0
 ENEMY_SPEED = 6.0
 HUD_HEIGHT = 16
@@ -112,7 +112,7 @@ def load_levels() -> tuple[Level, ...]:
 
 
 class Platformer:
-    title = "BIEGACZ"
+    title = "PLATFUS"
 
     def __init__(self, levels: Iterable[Level] | None = None) -> None:
         self.levels = tuple(levels) if levels is not None else load_levels()
@@ -181,8 +181,9 @@ class Platformer:
             self.velocity_y = -JUMP_SPEED
             self.on_ground = False
 
+        direction = int(controls.is_held(Key.RIGHT)) - int(controls.is_held(Key.LEFT))
         self._move_enemies(dt)
-        self._move_player(dt)
+        self._move_player(dt, direction)
         self._resolve_entities()
         target_camera = self.player_x - 38
         self.camera_x = max(0.0, min(self.level.width - WIDTH, target_camera))
@@ -197,12 +198,17 @@ class Platformer:
                 enemy.x = enemy.right
                 enemy.direction = -1
 
-    def _move_player(self, dt: float) -> None:
-        self.player_x += RUN_SPEED * dt
+    def _move_player(self, dt: float, direction: int) -> None:
+        horizontal_change = direction * MOVE_SPEED * dt
+        self.player_x += horizontal_change
+        self.player_x = max(0.0, min(self.level.width - PLAYER_WIDTH, self.player_x))
         rect = self.player_rect
         for platform in self._platform_rects():
             if rect.colliderect(platform):
-                self.player_x = float(platform.left - PLAYER_WIDTH)
+                if horizontal_change > 0:
+                    self.player_x = float(platform.left - PLAYER_WIDTH)
+                elif horizontal_change < 0:
+                    self.player_x = float(platform.right)
                 rect = self.player_rect
 
         old_bottom = self.player_y + PLAYER_HEIGHT
@@ -293,7 +299,7 @@ class Platformer:
         if self.notice_time > 0:
             text(surface, "NAJPIERW KLUCZ!", WIDTH // 2, 23, color=COLORS.food, size=7, center=True, bold=True)
         if self.status is Status.READY:
-            self._overlay(surface, "BIEGACZ", "A / GORA: SKOK")
+            self._overlay(surface, "PLATFUS", "LEWO/PRAWO + A")
         elif self.status is Status.LEVEL_COMPLETE:
             self._overlay(surface, "POZIOM!", "DALEJ...")
         elif self.status is Status.GAME_OVER:

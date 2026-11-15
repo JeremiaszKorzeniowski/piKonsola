@@ -40,7 +40,7 @@ class ConsoleApp:
         self.selected = 0
         self.power_selected = 0
         self.games = [
-            ("BIEGACZ", Platformer()),
+            ("PLATFUS", Platformer()),
             ("NIBBLES", self.game),
             ("INVADERS", SpaceInvaders()),
             ("PAC-MAN", Pacman()),

@@ -3,7 +3,7 @@
 Minimalna konsola retro dla Raspberry Pi Zero W i ekranu Waveshare 1.44" LCD HAT
 (ST7735S, 128x128). Konsola zawiera launcher oraz gry **Nibbles**,
 **Invaders** (klon klasycznego Space Invaders), **Pac-Man** i spokojna gra
-**River** inspirowana River Raid oraz **Biegacz** — prosta platformówka.
+**River** inspirowana River Raid oraz **Platfus** — prosta platformówka.
 Na Raspberry Pi obraz jest wysyłany bezpośrednio do LCD przez SPI — projekt nie
 wymaga starego sterownika `fbcp` ani środowiska graficznego.
 
@@ -43,8 +43,9 @@ W River joystick steruje samolotem nad prostą rzeką. Omijaj skały i łodzie,
 zbieraj zielone kanistry paliwa i niszcz mosty. Po każdym moście pojawia się
 trochę więcej obiektów. `KEY1` lub kliknięcie joysticka wystrzeliwuje pocisk.
 
-W Biegaczu bohater sam biegnie w prawo. `KEY1`, joystick w górę lub kliknięcie
-joysticka wykonuje skok. Znajdź klucz, omiń kolce i przeciwników, a potem dotrzyj
+W Platfusie joystick w lewo i prawo porusza bohaterem. `KEY1`, joystick w górę
+lub kliknięcie joysticka wykonuje skok. Wskakuj na platformy, znajdź klucz,
+omiń kolce i przeciwników, a potem dotrzyj
 do drzwi. Masz trzy życia. Poziomy znajdują się jako osobne pliki w katalogu
 `src/pikonsola/games/platformer_levels`; plik o nazwie `level_*.py` jest
 automatycznie dodawany do gry.
