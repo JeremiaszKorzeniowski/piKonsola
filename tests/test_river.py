@@ -1,4 +1,4 @@
-from pikonsola.games.river import Bullet, River, RiverObject, Status
+from pikonsola.games.river import Bridge, Bullet, River, RiverObject, Status
 from pikonsola.input import InputFrame, Key
 
 
@@ -70,11 +70,51 @@ def test_bullet_destroys_boat_and_scores() -> None:
 def test_fuel_is_collected_without_losing_life() -> None:
     game = River(seed=1)
     game.update(0, press(Key.A))
+    game.fuel = 70
     game.objects = [RiverObject(game.player_x + 2, game.player_y, "fuel")]
     game._resolve_collisions()
     assert game.objects == []
     assert game.score == 25
     assert game.lives == 3
+    assert game.fuel == 100
+
+
+def test_fuel_falls_during_flight() -> None:
+    game = River(seed=1)
+    game.update(0, press(Key.A))
+    game.update(1, InputFrame())
+    assert game.fuel < 100
+
+
+def test_empty_fuel_ends_game() -> None:
+    game = River(seed=1)
+    game.update(0, press(Key.A))
+    game.fuel = 1
+    game.update(1, InputFrame())
+    assert game.status is Status.GAME_OVER
+    assert game.game_over_reason == "BRAK PALIWA"
+
+
+def test_bridge_can_be_destroyed_and_increases_object_density() -> None:
+    game = River(seed=1)
+    game.update(0, press(Key.A))
+    bridge = Bridge(50)
+    game.bridges = [bridge]
+    bridge_rect = game._bridge_rect(bridge)
+    game.bullets = [Bullet(bridge_rect.centerx, bridge_rect.y)]
+    old_interval = game._spawn_interval()
+    game._resolve_collisions()
+    assert game.bridges == []
+    assert game.score == 50
+    assert game.stage == 1
+    assert game._spawn_interval() < old_interval
+
+
+def test_bridge_appears_after_enough_distance() -> None:
+    game = River(seed=1)
+    game.distance = game.next_bridge_distance
+    game._spawn_bridge()
+    assert len(game.bridges) == 1
 
 
 def test_three_crashes_end_game() -> None:

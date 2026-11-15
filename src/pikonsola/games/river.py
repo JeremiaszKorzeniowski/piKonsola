@@ -15,12 +15,22 @@ from ..ui import text
 RIVER_TOP = 18
 MIN_RIVER_WIDTH = 64
 MAX_RIVER_WIDTH = 104
-SECTION_HEIGHT = 10
+SECTION_HEIGHT = 12
 PLAYER_WIDTH = 11
 PLAYER_HEIGHT = 9
 PLAYER_SPEED = 46.0
 SCROLL_SPEED = 24.0
 BULLET_SPEED = 72.0
+FUEL_BURN_RATE = 1.8
+BRIDGE_SPACING = 330
+
+# Gotowe, lekkie warianty zmiany brzegu: przesunięcie środka i zmiana szerokości.
+BANK_CHANGES = (
+    (-5, -4), (-4, 2), (-3, 6), (-2, -6), (-1, 4),
+    (0, -7), (0, 7), (1, -4), (2, 6), (3, -6), (4, 2), (5, 4),
+)
+OBJECT_KINDS = ("rock", "rock", "rock", "rock", "boat", "boat", "boat", "boat", "fuel")
+SPAWN_JITTER = (0.0, 0.12, 0.24, 0.36)
 
 
 class Status(Enum):
@@ -59,6 +69,11 @@ class RiverSection:
     right: float
 
 
+@dataclass
+class Bridge:
+    y: float
+
+
 class River:
     title = "RIVER"
 
@@ -72,13 +87,18 @@ class River:
         self.player_y = 105.0
         self.objects: list[RiverObject] = []
         self.bullets: list[Bullet] = []
+        self.bridges: list[Bridge] = []
         self.score = 0
         self.lives = 3
+        self.fuel = 100.0
+        self.stage = 0
         self.distance = 0.0
+        self.next_bridge_distance = 260.0
         self.sections = self._initial_sections()
         self.spawn_timer = 0.65
         self.fire_cooldown = 0.0
         self.invulnerable = 0.0
+        self.game_over_reason = "KONIEC"
         self.status = Status.READY
 
     def update(self, dt: float, controls: InputFrame) -> None:
@@ -98,6 +118,10 @@ class River:
 
         self.fire_cooldown = max(0.0, self.fire_cooldown - dt)
         self.invulnerable = max(0.0, self.invulnerable - dt)
+        self.fuel = max(0.0, self.fuel - FUEL_BURN_RATE * dt)
+        if self.fuel == 0.0:
+            self._finish_game("BRAK PALIWA")
+            return
         if (controls.just_pressed(Key.A) or controls.just_pressed(Key.START)) and self.fire_cooldown == 0.0:
             self.bullets.append(Bullet(self.player_x + 4.5, self.player_y - 5))
             self.fire_cooldown = 0.38
@@ -106,6 +130,7 @@ class River:
         self._move_river(dt)
         self._move_objects(dt)
         self._spawn_objects(dt)
+        self._spawn_bridge()
         self._resolve_collisions()
 
     def _initial_sections(self) -> list[RiverSection]:
@@ -116,8 +141,9 @@ class River:
         return sections
 
     def _next_bounds(self, left: float, right: float) -> tuple[float, float]:
-        width = max(MIN_RIVER_WIDTH, min(MAX_RIVER_WIDTH, right - left + self.rng.randint(-7, 7)))
-        center = (left + right) / 2 + self.rng.randint(-5, 5)
+        center_change, width_change = self.rng.choice(BANK_CHANGES)
+        width = max(MIN_RIVER_WIDTH, min(MAX_RIVER_WIDTH, right - left + width_change))
+        center = (left + right) / 2 + center_change
         center = max(width / 2 + 3, min(WIDTH - width / 2 - 3, center))
         return center - width / 2, center + width / 2
 
@@ -150,24 +176,52 @@ class River:
     def _move_objects(self, dt: float) -> None:
         for obj in self.objects:
             obj.y += SCROLL_SPEED * dt
+        for bridge in self.bridges:
+            bridge.y += SCROLL_SPEED * dt
         for bullet in self.bullets:
             bullet.y -= BULLET_SPEED * dt
         self.objects = [obj for obj in self.objects if obj.y < HEIGHT + 12]
+        passed_bridges = [bridge for bridge in self.bridges if bridge.y >= HEIGHT]
+        self.stage += len(passed_bridges)
+        self.bridges = [bridge for bridge in self.bridges if bridge.y < HEIGHT]
         self.bullets = [bullet for bullet in self.bullets if bullet.y > RIVER_TOP - 1]
 
     def _spawn_objects(self, dt: float) -> None:
         self.spawn_timer -= dt
         if self.spawn_timer > 0:
             return
-        kind = self.rng.choices(("rock", "boat", "fuel"), weights=(4, 4, 1), k=1)[0]
+        kind = self.rng.choice(OBJECT_KINDS)
         width = {"rock": 9, "boat": 9, "fuel": 7}[kind]
         left, right = self._river_bounds(RIVER_TOP + 1)
         x = self.rng.randint(round(left + 8), round(right - width - 8))
         self.objects.append(RiverObject(float(x), float(RIVER_TOP + 1), kind))
-        self.spawn_timer = self.rng.uniform(1.15, 1.65)
+        self.spawn_timer = self._spawn_interval() + self.rng.choice(SPAWN_JITTER)
+
+    def _spawn_interval(self) -> float:
+        return max(0.65, 1.35 - self.stage * 0.11)
+
+    def _spawn_bridge(self) -> None:
+        if self.distance < self.next_bridge_distance:
+            return
+        self.bridges.append(Bridge(float(RIVER_TOP + 2)))
+        self.next_bridge_distance += BRIDGE_SPACING
+
+    def _bridge_rect(self, bridge: Bridge) -> pygame.Rect:
+        left, right = self._river_bounds(bridge.y + 3)
+        return pygame.Rect(round(left), round(bridge.y), max(1, round(right - left)), 6)
 
     def _resolve_collisions(self) -> None:
         for bullet in list(self.bullets):
+            bridge = next(
+                (candidate for candidate in self.bridges if bullet.rect.colliderect(self._bridge_rect(candidate))),
+                None,
+            )
+            if bridge is not None:
+                self.bullets.remove(bullet)
+                self.bridges.remove(bridge)
+                self.stage += 1
+                self.score += 50
+                continue
             target = next(
                 (obj for obj in self.objects if obj.kind != "fuel" and bullet.rect.colliderect(obj.rect)),
                 None,
@@ -188,7 +242,18 @@ class River:
         )
         if fuel is not None:
             self.objects.remove(fuel)
+            self.fuel = min(100.0, self.fuel + 35.0)
             self.score += 25
+
+        bridge = next(
+            (candidate for candidate in self.bridges if self._bridge_rect(candidate).colliderect(player_rect)),
+            None,
+        )
+        if bridge is not None and self.invulnerable == 0.0:
+            self.bridges.remove(bridge)
+            self.stage += 1
+            self._hit_player()
+            return
 
         obstacle = next(
             (obj for obj in self.objects if obj.kind != "fuel" and obj.rect.colliderect(player_rect)),
@@ -211,8 +276,12 @@ class River:
         left, right = self._river_bounds(self.player_y + PLAYER_HEIGHT / 2)
         self.player_x = (left + right - PLAYER_WIDTH) / 2
         if self.lives <= 0:
-            self.best = max(self.best, self.score)
-            self.status = Status.GAME_OVER
+            self._finish_game("KONIEC")
+
+    def _finish_game(self, reason: str) -> None:
+        self.best = max(self.best, self.score)
+        self.game_over_reason = reason
+        self.status = Status.GAME_OVER
 
     def draw(self, surface: pygame.Surface) -> None:
         bank = (45, 91, 55)
@@ -235,11 +304,16 @@ class River:
 
         pygame.draw.rect(surface, COLORS.background, (0, 0, WIDTH, 18))
         text(surface, f"S {self.score:03d}", 3, 3, color=COLORS.accent, size=8, bold=True)
-        text(surface, f"HI {self.best:03d}", WIDTH // 2, 3, color=COLORS.muted, size=7, center=True)
+        text(surface, "F", 45, 3, color=COLORS.muted, size=8, bold=True)
+        pygame.draw.rect(surface, COLORS.muted, (54, 5, 34, 7), 1)
+        fuel_color = COLORS.accent if self.fuel > 30 else COLORS.danger
+        pygame.draw.rect(surface, fuel_color, (56, 7, round(30 * self.fuel / 100), 3))
         text(surface, f"L {self.lives}", 103, 3, color=COLORS.food, size=8, bold=True)
 
         for obj in self.objects:
             self._draw_object(surface, obj)
+        for bridge in self.bridges:
+            self._draw_bridge(surface, bridge)
         for bullet in self.bullets:
             pygame.draw.rect(surface, COLORS.food, bullet.rect)
         if self.invulnerable == 0.0 or int(self.invulnerable * 10) % 2 == 0:
@@ -248,13 +322,21 @@ class River:
         if self.status is Status.READY:
             self._overlay(surface, "RIVER", "A / START")
         elif self.status is Status.GAME_OVER:
-            self._overlay(surface, "KONIEC", "A: JESZCZE RAZ")
+            self._overlay(surface, self.game_over_reason, "A: JESZCZE RAZ")
 
     def _draw_player(self, surface: pygame.Surface) -> None:
         x, y = round(self.player_x), round(self.player_y)
         pygame.draw.rect(surface, COLORS.food, (x + 4, y, 3, 9))
         pygame.draw.rect(surface, COLORS.food, (x, y + 4, PLAYER_WIDTH, 3))
         pygame.draw.rect(surface, COLORS.text, (x + 4, y + 1, 3, 2))
+
+    def _draw_bridge(self, surface: pygame.Surface, bridge: Bridge) -> None:
+        rect = self._bridge_rect(bridge)
+        pygame.draw.rect(surface, (132, 83, 47), rect)
+        pygame.draw.line(surface, (224, 171, 93), rect.topleft, rect.topright)
+        pygame.draw.line(surface, (83, 48, 31), rect.bottomleft, rect.bottomright)
+        for x in range(rect.left + 4, rect.right, 8):
+            pygame.draw.line(surface, (83, 48, 31), (x, rect.top), (x, rect.bottom - 1))
 
     @staticmethod
     def _draw_object(surface: pygame.Surface, obj: RiverObject) -> None:
