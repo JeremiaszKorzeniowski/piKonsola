@@ -16,8 +16,18 @@ wymaga starego sterownika `fbcp` ani środowiska graficznego.
 | KEY3 | Escape | menu konsoli |
 
 Przytrzymanie `KEY3` przez 1,5 sekundy wraca z gry do launchera. W launcherze
-`KEY3` otwiera ekran wyłączenia. Wyłączenie systemu wymaga dodatkowej konfiguracji
-opisanej niżej.
+`KEY3` otwiera ekran wyłączenia, a `KEY2` ekran aktualizacji.
+
+## Aktualizacja z menu
+
+W launcherze naciśnij `KEY2`, a następnie potwierdź przez `KEY1` lub klik
+joysticka. Konsola wykonuje bezpieczne `git pull --ff-only origin main`, więc nie
+nadpisze lokalnych zmian. Po udanym pobraniu aplikacja sama uruchamia się ponownie.
+Przy błędzie szczegóły trafiają do dziennika usługi:
+
+```bash
+journalctl -u pikonsola.service -n 50 --no-pager
+```
 
 ## Uruchomienie na komputerze
 
