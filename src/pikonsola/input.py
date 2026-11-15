@@ -54,8 +54,28 @@ class KeyboardInput(InputBackend):
         pygame.K_ESCAPE: Key.MENU,
     }
 
+    # Standardowy układ przycisków pada Xbox widziany przez SDL/pygame.
+    BUTTON_MAP = {
+        0: Key.A,
+        1: Key.B,
+        6: Key.MENU,  # Back / View
+        7: Key.START,
+        11: Key.UP,
+        12: Key.DOWN,
+        13: Key.LEFT,
+        14: Key.RIGHT,
+    }
+    DEAD_ZONE = 0.45
+
     def __init__(self) -> None:
-        self._held: set[Key] = set()
+        pygame.joystick.init()
+        self._gamepads: dict[int, pygame.joystick.JoystickType] = {}
+        for index in range(pygame.joystick.get_count()):
+            self._add_gamepad(index)
+        self._keyboard_held: set[Key] = set()
+        self._controller_buttons: set[Key] = set()
+        self._controller_directions: set[Key] = set()
+        self._axes = {0: 0.0, 1: 0.0}
         self._menu_since: Optional[float] = None
 
     def poll(self) -> InputFrame:
@@ -63,24 +83,96 @@ class KeyboardInput(InputBackend):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pressed.add(Key.MENU)
-                self._held.add(Key.MENU)
+                self._keyboard_held.add(Key.MENU)
             elif event.type == pygame.KEYDOWN and event.key in self.KEYMAP:
                 key = self.KEYMAP[event.key]
-                if key not in self._held:
+                if key not in self._keyboard_held:
                     pressed.add(key)
-                self._held.add(key)
+                self._keyboard_held.add(key)
             elif event.type == pygame.KEYUP and event.key in self.KEYMAP:
-                self._held.discard(self.KEYMAP[event.key])
+                self._keyboard_held.discard(self.KEYMAP[event.key])
+            elif event.type == pygame.JOYDEVICEADDED:
+                self._add_gamepad(event.device_index)
+            elif event.type == pygame.JOYDEVICEREMOVED:
+                self._gamepads.pop(event.instance_id, None)
+            elif event.type == pygame.JOYBUTTONDOWN and event.button in self.BUTTON_MAP:
+                key = self.BUTTON_MAP[event.button]
+                if key not in self._controller_buttons:
+                    pressed.add(key)
+                self._controller_buttons.add(key)
+            elif event.type == pygame.JOYBUTTONUP and event.button in self.BUTTON_MAP:
+                self._controller_buttons.discard(self.BUTTON_MAP[event.button])
+            elif event.type == pygame.JOYHATMOTION:
+                previous = set(self._controller_directions)
+                self._set_hat(event.value)
+                pressed.update(self._controller_directions - previous)
+            elif event.type == pygame.JOYAXISMOTION and event.axis in self._axes:
+                previous = set(self._controller_directions)
+                self._axes[event.axis] = event.value
+                self._set_axis_directions()
+                pressed.update(self._controller_directions - previous)
 
+        held = self._keyboard_held | self._controller_buttons | self._controller_directions
         now = time.monotonic()
-        if Key.MENU in self._held:
+        if Key.MENU in held:
             if self._menu_since is None:
                 self._menu_since = now
             menu_seconds = now - self._menu_since
         else:
             self._menu_since = None
             menu_seconds = 0.0
-        return InputFrame(pressed, set(self._held), menu_seconds)
+        return InputFrame(pressed, held, menu_seconds)
+
+    def _add_gamepad(self, index: int) -> None:
+        joystick = pygame.joystick.Joystick(index)
+        joystick.init()
+        self._gamepads[joystick.get_instance_id()] = joystick
+
+    def _set_hat(self, value: tuple[int, int]) -> None:
+        x, y = value
+        self._controller_directions -= {Key.UP, Key.DOWN, Key.LEFT, Key.RIGHT}
+        if x < 0:
+            self._controller_directions.add(Key.LEFT)
+        elif x > 0:
+            self._controller_directions.add(Key.RIGHT)
+        if y < 0:
+            self._controller_directions.add(Key.DOWN)
+        elif y > 0:
+            self._controller_directions.add(Key.UP)
+
+    def _set_axis_directions(self) -> None:
+        self._controller_directions -= {Key.UP, Key.DOWN, Key.LEFT, Key.RIGHT}
+        x, y = self._axes[0], self._axes[1]
+        if x <= -self.DEAD_ZONE:
+            self._controller_directions.add(Key.LEFT)
+        elif x >= self.DEAD_ZONE:
+            self._controller_directions.add(Key.RIGHT)
+        if y <= -self.DEAD_ZONE:
+            self._controller_directions.add(Key.UP)
+        elif y >= self.DEAD_ZONE:
+            self._controller_directions.add(Key.DOWN)
+
+    def close(self) -> None:
+        for joystick in self._gamepads.values():
+            joystick.quit()
+        self._gamepads.clear()
+
+
+class CompositeInput(InputBackend):
+    def __init__(self, *backends: InputBackend) -> None:
+        self.backends = backends
+
+    def poll(self) -> InputFrame:
+        frames = [backend.poll() for backend in self.backends]
+        return InputFrame(
+            pressed=set().union(*(frame.pressed for frame in frames)),
+            held=set().union(*(frame.held for frame in frames)),
+            menu_held_seconds=max(frame.menu_held_seconds for frame in frames),
+        )
+
+    def close(self) -> None:
+        for backend in self.backends:
+            backend.close()
 
 
 class GPIOInput(InputBackend):
@@ -134,7 +226,7 @@ def create_input() -> InputBackend:
     is_pi = platform.system() == "Linux" and os.path.exists("/proc/device-tree/model")
     if requested == "gpio" or is_pi:
         try:
-            return GPIOInput()
+            return CompositeInput(GPIOInput(), KeyboardInput())
         except (ImportError, OSError) as exc:
             if requested == "gpio":
                 raise RuntimeError("Nie udało się uruchomić wejścia GPIO") from exc

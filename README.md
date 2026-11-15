@@ -1,8 +1,8 @@
 # piKonsola
 
 Minimalna konsola retro dla Raspberry Pi Zero W i ekranu Waveshare 1.44" LCD HAT
-(ST7735S, 128x128). Konsola zawiera launcher oraz gry **Nibbles** i
-**Invaders** (klon klasycznego Space Invaders).
+(ST7735S, 128x128). Konsola zawiera launcher oraz gry **Nibbles**,
+**Invaders** (klon klasycznego Space Invaders) i **Pac-Man**.
 Na Raspberry Pi obraz jest wysyłany bezpośrednio do LCD przez SPI — projekt nie
 wymaga starego sterownika `fbcp` ani środowiska graficznego.
 
@@ -15,6 +15,11 @@ wymaga starego sterownika `fbcp` ani środowiska graficznego.
 | KEY1 | Z | A |
 | KEY2 | X | B / powrót |
 | KEY3 | Escape | menu konsoli |
+
+Obsługiwany jest również pad Xbox podłączony przez USB: lewy drążek lub D-pad
+steruje ruchem, `A` zatwierdza, `B` wraca, `Start` uruchamia grę, a
+`Back`/`View` otwiera menu. Na Raspberry Pi pad działa równolegle z przyciskami
+HAT-a.
 
 W Invaders joystick służy do ruchu w lewo i prawo, a `KEY1` lub kliknięcie
 joysticka wystrzeliwuje pocisk.

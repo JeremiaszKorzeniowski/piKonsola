@@ -12,6 +12,7 @@ import pygame
 from .config import COLORS, FPS, HEIGHT, WIDTH
 from .display import create_display, selected_display
 from .games.nibbles import Nibbles
+from .games.pacman import Pacman
 from .games.space_invaders import SpaceInvaders
 from .input import InputBackend, Key, create_input
 from .ui import frame, text
@@ -35,7 +36,11 @@ class ConsoleApp:
         self.running = True
         self.restart_requested = False
         self.selected = 0
-        self.games = [("NIBBLES", self.game), ("INVADERS", SpaceInvaders())]
+        self.games = [
+            ("NIBBLES", self.game),
+            ("INVADERS", SpaceInvaders()),
+            ("PAC-MAN", Pacman()),
+        ]
         self.update_process: Optional[subprocess.Popen] = None
         self.update_elapsed = 0.0
         self.update_ok = False
