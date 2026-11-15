@@ -13,6 +13,7 @@ from .config import COLORS, FPS, HEIGHT, WIDTH
 from .display import create_display, selected_display
 from .games.arkanoid import Arkanoid
 from .games.asteroids import Asteroids
+from .games.defender import Defender
 from .games.nibbles import Nibbles
 from .games.pacman import Pacman
 from .games.platformer import Platformer
@@ -55,6 +56,7 @@ class ConsoleApp:
             ("NIBBLES", self.game),
             ("INVADERS", SpaceInvaders()),
             ("ASTEROIDS", Asteroids()),
+            ("DEFENDER", Defender()),
             ("PAC-MAN", Pacman()),
             ("RIVER", River()),
             ("CZOLGI", Tanks()),

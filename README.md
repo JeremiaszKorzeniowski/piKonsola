@@ -12,6 +12,8 @@ poziomy i podgląd następnego elementu. **Asteroids** to klasyczna walka w
 przestrzeni z rozpadającymi się skałami, bezwładnością i zawijaniem ekranu.
 **Arkanoid** pozwala odbijać piłkę paletką, kruszyć kolorową ścianę i przechodzić
 coraz szybsze poziomy.
+**Defender** to szybka strzelanka z przewijanym światem, radarem i lądownikami,
+które próbują porwać ludzi z powierzchni planety.
 Na Raspberry Pi obraz jest wysyłany bezpośrednio do LCD przez SPI — projekt nie
 wymaga starego sterownika `fbcp` ani środowiska graficznego.
 
@@ -64,6 +66,11 @@ zrzut. Pełne linie znikają, a co dziesięć linii rośnie poziom i prędkość
 W Arkanoidzie joystick w lewo i prawo przesuwa paletkę. `KEY1` lub kliknięcie
 joysticka wypuszcza piłkę. Oczyść wszystkie klocki, aby przejść na szybszy
 poziom; po utracie trzech piłek gra się kończy.
+
+W Defenderze joystick porusza statkiem w czterech kierunkach. `KEY1` lub
+kliknięcie joysticka strzela w kierunku lotu. Zniszcz lądowniki, zanim uniosą
+ludzi poza ekran; po udanym porwaniu przeciwnik zmienia się w szybkiego mutanta.
+Radar u góry pokazuje położenie statku, ludzi i wrogów w całym świecie.
 
 W Sokobanie joystick przesuwa magazyniera o jedno pole. Popchnij wszystkie
 skrzynie na żółte cele; skrzyń nie można ciągnąć. `KEY2` resetuje bieżącą
