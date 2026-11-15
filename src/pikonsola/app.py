@@ -14,6 +14,7 @@ from .display import create_display, selected_display
 from .games.arkanoid import Arkanoid
 from .games.asteroids import Asteroids
 from .games.defender import Defender
+from .games.knight_tour import KnightTour
 from .games.nibbles import Nibbles
 from .games.pacman import Pacman
 from .games.platformer import Platformer
@@ -51,6 +52,7 @@ class ConsoleApp:
         self.power_selected = 0
         self.games = [
             ("SOKOBAN", Sokoban()),
+            ("SKOCZEK", KnightTour()),
             ("PLATFUS", Platformer()),
             ("SNIEZKA 3D", SnowArena()),
             ("NIBBLES", self.game),

@@ -4,6 +4,7 @@ Minimalna konsola retro dla Raspberry Pi Zero W i ekranu Waveshare 1.44" LCD HAT
 (ST7735S, 128x128). Konsola zawiera launcher oraz gry **Nibbles**,
 **Invaders** (klon klasycznego Space Invaders), **Pac-Man** i spokojna gra
 **River** inspirowana River Raid, **Sokoban** — logiczne przesuwanie skrzyń,
+**Skoczek** — interaktywna wędrówka skoczka po całej szachownicy,
 **Platfus** — prosta platformówka oraz
 **Śnieżka 3D** — zimowa strzelanka FPP w stylu Wolfenstein 3D.
 W **Czołgach** bronisz bazy w uproszczonej grze inspirowanej Battle City.
@@ -76,6 +77,12 @@ W Sokobanie joystick przesuwa magazyniera o jedno pole. Popchnij wszystkie
 skrzynie na żółte cele; skrzyń nie można ciągnąć. `KEY2` resetuje bieżącą
 planszę. Trzy poziomy są osobnymi plikami w katalogu
 `src/pikonsola/games/sokoban_levels`.
+
+W Skoczku zaczynasz na polu A1. D-pad lub joystick przełącza podświetlone
+legalne cele, a `KEY1`, `A` albo kliknięcie joysticka zatwierdza skok.
+Odwiedzone pola stają się ciemnoszare. Wejście drugi raz na to samo pole kończy
+partię, a odwiedzenie wszystkich 64 pól oznacza zwycięstwo. `KEY2` resetuje
+partię w trakcie gry.
 
 W River joystick steruje samolotem nad prostą rzeką. Omijaj skały i łodzie,
 zbieraj zielone kanistry paliwa i niszcz mosty. Po każdym moście pojawia się
