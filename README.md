@@ -2,7 +2,8 @@
 
 Minimalna konsola retro dla Raspberry Pi Zero W i ekranu Waveshare 1.44" LCD HAT
 (ST7735S, 128x128). Konsola zawiera launcher oraz gry **Nibbles**,
-**Invaders** (klon klasycznego Space Invaders) i **Pac-Man**.
+**Invaders** (klon klasycznego Space Invaders), **Pac-Man** i spokojna gra
+**River** inspirowana River Raid.
 Na Raspberry Pi obraz jest wysyłany bezpośrednio do LCD przez SPI — projekt nie
 wymaga starego sterownika `fbcp` ani środowiska graficznego.
 
@@ -37,6 +38,9 @@ journalctl -u pikonsola.service -n 30 --no-pager | grep "pad USB"
 
 W Invaders joystick służy do ruchu w lewo i prawo, a `KEY1` lub kliknięcie
 joysticka wystrzeliwuje pocisk.
+
+W River joystick steruje samolotem nad prostą rzeką. Omijaj skały i łodzie,
+zbieraj zielone kanistry, a `KEY1` lub kliknięcie joysticka wystrzeliwuje pocisk.
 
 Przytrzymanie `KEY3` przez 1,5 sekundy wraca z gry do launchera. W launcherze
 `KEY3` otwiera menu zasilania z opcjami wyłączenia, restartu i powrotu, a

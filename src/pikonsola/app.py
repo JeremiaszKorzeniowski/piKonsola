@@ -13,6 +13,7 @@ from .config import COLORS, FPS, HEIGHT, WIDTH
 from .display import create_display, selected_display
 from .games.nibbles import Nibbles
 from .games.pacman import Pacman
+from .games.river import River
 from .games.space_invaders import SpaceInvaders
 from .input import InputBackend, Key, create_input
 from .ui import frame, text
@@ -41,6 +42,7 @@ class ConsoleApp:
             ("NIBBLES", self.game),
             ("INVADERS", SpaceInvaders()),
             ("PAC-MAN", Pacman()),
+            ("RIVER", River()),
         ]
         self.update_process: Optional[subprocess.Popen] = None
         self.update_elapsed = 0.0
@@ -164,12 +166,12 @@ class ConsoleApp:
         frame(self.canvas, "piKONSOLA")
         text(self.canvas, "GRY", 8, 25, color=COLORS.muted, size=8)
         for index, (name, _) in enumerate(self.games):
-            y = 38 + index * 18
+            y = 34 + index * 15
             if index == self.selected:
-                pygame.draw.rect(self.canvas, COLORS.accent_dark, (7, y - 2, 114, 16))
+                pygame.draw.rect(self.canvas, COLORS.accent_dark, (7, y - 2, 114, 14))
                 text(self.canvas, ">", 11, y, color=COLORS.food, size=9, bold=True)
             text(self.canvas, name, 23, y, size=9, bold=index == self.selected)
-        text(self.canvas, "KEY2: AKTUALIZACJA", 7, 91, color=COLORS.food, size=7)
+        text(self.canvas, "KEY2: AKTUALIZACJA", 7, 94, color=COLORS.food, size=7)
         text(self.canvas, "A: GRAJ", 7, 107, color=COLORS.accent, size=8)
         text(self.canvas, "MENU: OFF", 69, 107, color=COLORS.muted, size=7)
 
