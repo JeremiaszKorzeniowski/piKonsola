@@ -110,8 +110,8 @@ class KnightTour:
 
         light = (188, 199, 196)
         dark = (80, 94, 98)
-        visited_light = (62, 68, 70)
-        visited_dark = (38, 43, 46)
+        visited_light = (224, 174, 54)
+        visited_dark = (174, 124, 30)
         for rank in range(BOARD_SIZE):
             for file_index in range(BOARD_SIZE):
                 square = (file_index, rank)
