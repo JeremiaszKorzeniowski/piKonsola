@@ -80,6 +80,7 @@ class KeyboardInput(InputBackend):
 
     def poll(self) -> InputFrame:
         pressed: set[Key] = set()
+        previous_controller = self._controller_buttons | self._controller_directions
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pressed.add(Key.MENU)
@@ -114,6 +115,13 @@ class KeyboardInput(InputBackend):
                 self._set_axis_directions()
                 pressed.update(self._controller_directions - previous)
 
+        # Bezpośredni odczyt działa także wtedy, gdy sterownik SDL nie wysyła
+        # zdarzeń osi/przycisków przy ukrytym ekranie na Raspberry Pi OS Lite.
+        if self._gamepads:
+            self._poll_gamepads()
+            current_controller = self._controller_buttons | self._controller_directions
+            pressed.update(current_controller - previous_controller)
+
         held = self._keyboard_held | self._controller_buttons | self._controller_directions
         now = time.monotonic()
         if Key.MENU in held:
@@ -128,8 +136,45 @@ class KeyboardInput(InputBackend):
     def _add_gamepad(self, index: int) -> None:
         joystick = pygame.joystick.Joystick(index)
         joystick.init()
-        self._gamepads[joystick.get_instance_id()] = joystick
+        instance_id = joystick.get_instance_id()
+        if instance_id in self._gamepads:
+            self._gamepads[instance_id] = joystick
+            return
+        self._gamepads[instance_id] = joystick
         print(f"Wykryto pad USB: {joystick.get_name()}", flush=True)
+
+    def _poll_gamepads(self) -> None:
+        buttons: set[Key] = set()
+        directions: set[Key] = set()
+        for joystick in self._gamepads.values():
+            for button, key in self.BUTTON_MAP.items():
+                if button < joystick.get_numbuttons() and joystick.get_button(button):
+                    buttons.add(key)
+
+            if joystick.get_numaxes() >= 2:
+                x, y = joystick.get_axis(0), joystick.get_axis(1)
+                if x <= -self.DEAD_ZONE:
+                    directions.add(Key.LEFT)
+                elif x >= self.DEAD_ZONE:
+                    directions.add(Key.RIGHT)
+                if y <= -self.DEAD_ZONE:
+                    directions.add(Key.UP)
+                elif y >= self.DEAD_ZONE:
+                    directions.add(Key.DOWN)
+
+            for hat_index in range(joystick.get_numhats()):
+                x, y = joystick.get_hat(hat_index)
+                if x < 0:
+                    directions.add(Key.LEFT)
+                elif x > 0:
+                    directions.add(Key.RIGHT)
+                if y < 0:
+                    directions.add(Key.DOWN)
+                elif y > 0:
+                    directions.add(Key.UP)
+
+        self._controller_buttons = buttons
+        self._controller_directions = directions
 
     def _set_hat(self, value: tuple[int, int]) -> None:
         x, y = value
