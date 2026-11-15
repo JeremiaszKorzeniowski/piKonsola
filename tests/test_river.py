@@ -12,15 +12,41 @@ def test_game_starts_with_a() -> None:
     assert game.status is Status.PLAYING
 
 
-def test_player_moves_but_stays_inside_river() -> None:
+def test_player_moves_but_stays_on_screen() -> None:
     game = River(seed=1)
     game.update(0, press(Key.A))
     start = game.player_x
     game.update(0.1, InputFrame(held={Key.RIGHT}))
     assert game.player_x > start
     game.update(10, InputFrame(held={Key.RIGHT, Key.DOWN}))
-    assert game.player_x <= 97
+    assert game.player_x <= 116
     assert game.player_y <= 115
+
+
+def test_water_stripes_move_down_the_screen() -> None:
+    game = River(seed=1)
+    first_rows = list(game._stripe_rows())
+    game.distance = 3
+    moved_rows = list(game._stripe_rows())
+    assert moved_rows[1] == first_rows[1] + 3
+
+
+def test_generated_river_never_gets_narrower_than_half_screen() -> None:
+    game = River(seed=1)
+    for _ in range(200):
+        game._move_river(0.1)
+        assert all(section.right - section.left >= 64 for section in game.sections)
+
+
+def test_hitting_bank_costs_life_and_returns_player_to_water() -> None:
+    game = River(seed=1)
+    game.update(0, press(Key.A))
+    game.player_x = 0
+    game._resolve_collisions()
+    assert game.lives == 2
+    left, right = game._river_bounds(game.player_y)
+    assert left + 2 <= game.player_x
+    assert game.player_x + 11 <= right - 2
 
 
 def test_player_can_shoot() -> None:

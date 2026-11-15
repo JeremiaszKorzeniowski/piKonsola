@@ -12,8 +12,10 @@ from ..input import InputFrame, Key
 from ..ui import text
 
 
-RIVER_LEFT = 17
-RIVER_RIGHT = 111
+RIVER_TOP = 18
+MIN_RIVER_WIDTH = 64
+MAX_RIVER_WIDTH = 104
+SECTION_HEIGHT = 10
 PLAYER_WIDTH = 11
 PLAYER_HEIGHT = 9
 PLAYER_SPEED = 46.0
@@ -50,6 +52,13 @@ class Bullet:
         return pygame.Rect(round(self.x), round(self.y), 2, 5)
 
 
+@dataclass
+class RiverSection:
+    y: float
+    left: float
+    right: float
+
+
 class River:
     title = "RIVER"
 
@@ -66,6 +75,7 @@ class River:
         self.score = 0
         self.lives = 3
         self.distance = 0.0
+        self.sections = self._initial_sections()
         self.spawn_timer = 0.65
         self.fire_cooldown = 0.0
         self.invulnerable = 0.0
@@ -83,7 +93,7 @@ class River:
         vertical = int(controls.is_held(Key.DOWN)) - int(controls.is_held(Key.UP))
         self.player_x += horizontal * PLAYER_SPEED * dt
         self.player_y += vertical * PLAYER_SPEED * dt
-        self.player_x = max(RIVER_LEFT + 3.0, min(RIVER_RIGHT - PLAYER_WIDTH - 3.0, self.player_x))
+        self.player_x = max(1.0, min(WIDTH - PLAYER_WIDTH - 1.0, self.player_x))
         self.player_y = max(42.0, min(HEIGHT - PLAYER_HEIGHT - 4.0, self.player_y))
 
         self.fire_cooldown = max(0.0, self.fire_cooldown - dt)
@@ -93,9 +103,49 @@ class River:
             self.fire_cooldown = 0.38
 
         self.distance += SCROLL_SPEED * dt
+        self._move_river(dt)
         self._move_objects(dt)
         self._spawn_objects(dt)
         self._resolve_collisions()
+
+    def _initial_sections(self) -> list[RiverSection]:
+        sections = [RiverSection(float(RIVER_TOP), 19.0, 109.0)]
+        for y in range(RIVER_TOP + SECTION_HEIGHT, HEIGHT + SECTION_HEIGHT + 1, SECTION_HEIGHT):
+            left, right = self._next_bounds(sections[-1].left, sections[-1].right)
+            sections.append(RiverSection(float(y), left, right))
+        return sections
+
+    def _next_bounds(self, left: float, right: float) -> tuple[float, float]:
+        width = max(MIN_RIVER_WIDTH, min(MAX_RIVER_WIDTH, right - left + self.rng.randint(-7, 7)))
+        center = (left + right) / 2 + self.rng.randint(-5, 5)
+        center = max(width / 2 + 3, min(WIDTH - width / 2 - 3, center))
+        return center - width / 2, center + width / 2
+
+    def _move_river(self, dt: float) -> None:
+        shift = SCROLL_SPEED * dt
+        for section in self.sections:
+            section.y += shift
+        while self.sections[0].y > RIVER_TOP:
+            first = self.sections[0]
+            left, right = self._next_bounds(first.left, first.right)
+            self.sections.insert(0, RiverSection(first.y - SECTION_HEIGHT, left, right))
+        self.sections = [section for section in self.sections if section.y <= HEIGHT + SECTION_HEIGHT]
+
+    def _river_bounds(self, y: float) -> tuple[float, float]:
+        if y <= self.sections[0].y:
+            return self.sections[0].left, self.sections[0].right
+        for upper, lower in zip(self.sections, self.sections[1:]):
+            if y <= lower.y:
+                span = lower.y - upper.y
+                progress = 0.0 if span == 0 else (y - upper.y) / span
+                left = upper.left + (lower.left - upper.left) * progress
+                right = upper.right + (lower.right - upper.right) * progress
+                return left, right
+        return self.sections[-1].left, self.sections[-1].right
+
+    def _stripe_rows(self) -> range:
+        offset = int(self.distance) % 24
+        return range(-24 + offset, HEIGHT, 24)
 
     def _move_objects(self, dt: float) -> None:
         for obj in self.objects:
@@ -103,7 +153,7 @@ class River:
         for bullet in self.bullets:
             bullet.y -= BULLET_SPEED * dt
         self.objects = [obj for obj in self.objects if obj.y < HEIGHT + 12]
-        self.bullets = [bullet for bullet in self.bullets if bullet.y > 17]
+        self.bullets = [bullet for bullet in self.bullets if bullet.y > RIVER_TOP - 1]
 
     def _spawn_objects(self, dt: float) -> None:
         self.spawn_timer -= dt
@@ -111,8 +161,9 @@ class River:
             return
         kind = self.rng.choices(("rock", "boat", "fuel"), weights=(4, 4, 1), k=1)[0]
         width = {"rock": 9, "boat": 9, "fuel": 7}[kind]
-        x = self.rng.randint(RIVER_LEFT + 8, RIVER_RIGHT - width - 8)
-        self.objects.append(RiverObject(float(x), 19.0, kind))
+        left, right = self._river_bounds(RIVER_TOP + 1)
+        x = self.rng.randint(round(left + 8), round(right - width - 8))
+        self.objects.append(RiverObject(float(x), float(RIVER_TOP + 1), kind))
         self.spawn_timer = self.rng.uniform(1.15, 1.65)
 
     def _resolve_collisions(self) -> None:
@@ -127,6 +178,10 @@ class River:
                 self.score += 10 if target.kind == "rock" else 20
 
         player_rect = pygame.Rect(round(self.player_x), round(self.player_y), PLAYER_WIDTH, PLAYER_HEIGHT)
+        if self._player_on_bank(player_rect) and self.invulnerable == 0.0:
+            self._hit_player()
+            return
+
         fuel = next(
             (obj for obj in self.objects if obj.kind == "fuel" and obj.rect.colliderect(player_rect)),
             None,
@@ -141,25 +196,42 @@ class River:
         )
         if obstacle is not None and self.invulnerable == 0.0:
             self.objects.remove(obstacle)
-            self.lives -= 1
-            self.invulnerable = 1.0
-            if self.lives <= 0:
-                self.best = max(self.best, self.score)
-                self.status = Status.GAME_OVER
+            self._hit_player()
+
+    def _player_on_bank(self, player_rect: pygame.Rect) -> bool:
+        for y in (player_rect.top, player_rect.centery, player_rect.bottom):
+            left, right = self._river_bounds(y)
+            if player_rect.left < left + 2 or player_rect.right > right - 2:
+                return True
+        return False
+
+    def _hit_player(self) -> None:
+        self.lives -= 1
+        self.invulnerable = 1.0
+        left, right = self._river_bounds(self.player_y + PLAYER_HEIGHT / 2)
+        self.player_x = (left + right - PLAYER_WIDTH) / 2
+        if self.lives <= 0:
+            self.best = max(self.best, self.score)
+            self.status = Status.GAME_OVER
 
     def draw(self, surface: pygame.Surface) -> None:
         bank = (45, 91, 55)
         water = (21, 78, 112)
         foam = (72, 144, 166)
         surface.fill(bank)
-        pygame.draw.rect(surface, water, (RIVER_LEFT, 18, RIVER_RIGHT - RIVER_LEFT, HEIGHT - 18))
-        pygame.draw.line(surface, (99, 145, 76), (RIVER_LEFT, 18), (RIVER_LEFT, HEIGHT - 1), 2)
-        pygame.draw.line(surface, (99, 145, 76), (RIVER_RIGHT - 1, 18), (RIVER_RIGHT - 1, HEIGHT - 1), 2)
+        left_bank = [(round(section.left), round(section.y)) for section in self.sections]
+        right_bank = [(round(section.right), round(section.y)) for section in self.sections]
+        pygame.draw.polygon(surface, water, left_bank + list(reversed(right_bank)))
+        pygame.draw.lines(surface, (99, 145, 76), False, left_bank, 2)
+        pygame.draw.lines(surface, (99, 145, 76), False, right_bank, 2)
 
-        stripe_offset = int(self.distance) % 24
-        for y in range(24 - stripe_offset, HEIGHT, 24):
-            pygame.draw.line(surface, foam, (30, y), (30, y + 6))
-            pygame.draw.line(surface, foam, (96, y + 8), (96, y + 14))
+        for y in self._stripe_rows():
+            left, right = self._river_bounds(y)
+            river_width = right - left
+            x1 = round(left + river_width * 0.28)
+            x2 = round(left + river_width * 0.72)
+            pygame.draw.line(surface, foam, (x1, y), (x1, y + 6))
+            pygame.draw.line(surface, foam, (x2, y + 8), (x2, y + 14))
 
         pygame.draw.rect(surface, COLORS.background, (0, 0, WIDTH, 18))
         text(surface, f"S {self.score:03d}", 3, 3, color=COLORS.accent, size=8, bold=True)
