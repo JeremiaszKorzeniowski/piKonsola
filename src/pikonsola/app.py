@@ -11,6 +11,7 @@ import pygame
 
 from .config import COLORS, FPS, HEIGHT, WIDTH
 from .display import create_display, selected_display
+from .games.asteroids import Asteroids
 from .games.nibbles import Nibbles
 from .games.pacman import Pacman
 from .games.platformer import Platformer
@@ -52,6 +53,7 @@ class ConsoleApp:
             ("SNIEZKA 3D", SnowArena()),
             ("NIBBLES", self.game),
             ("INVADERS", SpaceInvaders()),
+            ("ASTEROIDS", Asteroids()),
             ("PAC-MAN", Pacman()),
             ("RIVER", River()),
             ("CZOLGI", Tanks()),

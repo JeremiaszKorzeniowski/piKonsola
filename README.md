@@ -8,7 +8,8 @@ Minimalna konsola retro dla Raspberry Pi Zero W i ekranu Waveshare 1.44" LCD HAT
 **Śnieżka 3D** — zimowa strzelanka FPP w stylu Wolfenstein 3D.
 W **Czołgach** bronisz bazy w uproszczonej grze inspirowanej Battle City.
 **Tetris** oferuje klasyczną planszę 10×20, siedem rodzajów klocków, kolejne
-poziomy i podgląd następnego elementu.
+poziomy i podgląd następnego elementu. **Asteroids** to klasyczna walka w
+przestrzeni z rozpadającymi się skałami, bezwładnością i zawijaniem ekranu.
 Na Raspberry Pi obraz jest wysyłany bezpośrednio do LCD przez SPI — projekt nie
 wymaga starego sterownika `fbcp` ani środowiska graficznego.
 
@@ -43,6 +44,11 @@ journalctl -u pikonsola.service -n 30 --no-pager | grep "pad USB"
 
 W Invaders joystick służy do ruchu w lewo i prawo, a `KEY1` lub kliknięcie
 joysticka wystrzeliwuje pocisk.
+
+W Asteroids joystick w lewo i prawo obraca statek, w górę uruchamia silnik,
+a w dół hamuje. `KEY1` lub kliknięcie joysticka strzela. Duże asteroidy po
+trafieniu rozpadają się na dwie mniejsze; po oczyszczeniu ekranu zaczyna się
+trudniejsza fala.
 
 W Czołgach joystick porusza pojazdem w czterech kierunkach, a `KEY1` lub
 kliknięcie joysticka strzela w kierunku jazdy. Zniszcz trzy czerwone czołgi,
