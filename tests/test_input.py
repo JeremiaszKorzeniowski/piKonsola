@@ -1,7 +1,8 @@
 import pygame
+import struct
 from types import SimpleNamespace
 
-from pikonsola.input import KeyboardInput, Key
+from pikonsola.input import KeyboardInput, Key, LinuxJoystickDevice
 
 
 class FakeGamepad:
@@ -77,3 +78,25 @@ def test_gamepad_state_is_polled_without_sdl_events(monkeypatch) -> None:
     assert frame.is_held(Key.A)
     assert frame.just_pressed(Key.LEFT)
     assert frame.is_held(Key.UP)
+
+
+def test_linux_joydev_reader_maps_powera_stick_dpad_and_buttons(monkeypatch) -> None:
+    events = b"".join(
+        [
+            struct.pack("<IhBB", 0, -32767, 0x02, 0),  # lewy drążek w lewo
+            struct.pack("<IhBB", 0, -32767, 0x02, 7),  # D-pad w górę
+            struct.pack("<IhBB", 0, 1, 0x01, 0),  # A
+            struct.pack("<IhBB", 0, 1, 0x01, 7),  # Start
+        ]
+    )
+    chunks = [events[index : index + 8] for index in range(0, len(events), 8)]
+
+    device = object.__new__(LinuxJoystickDevice)
+    device.fd = 123
+    device.axes = {}
+    device.buttons = set()
+    monkeypatch.setattr("pikonsola.input.os.read", lambda fd, size: chunks.pop(0) if chunks else (_ for _ in ()).throw(BlockingIOError()))
+
+    device.poll()
+    held = device.held_keys(0.45)
+    assert {Key.LEFT, Key.UP, Key.A, Key.START} <= held

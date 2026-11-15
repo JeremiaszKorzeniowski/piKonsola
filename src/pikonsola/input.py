@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import os
 import platform
+import struct
 import time
 from dataclasses import dataclass, field
 from enum import Enum
+from pathlib import Path
 from typing import Optional
 
 import pygame
@@ -42,6 +44,18 @@ class InputBackend:
         pass
 
 
+GAMEPAD_BUTTON_MAP = {
+    0: Key.A,
+    1: Key.B,
+    6: Key.MENU,  # Back / View
+    7: Key.START,
+    11: Key.UP,
+    12: Key.DOWN,
+    13: Key.LEFT,
+    14: Key.RIGHT,
+}
+
+
 class KeyboardInput(InputBackend):
     KEYMAP = {
         pygame.K_UP: Key.UP,
@@ -55,24 +69,17 @@ class KeyboardInput(InputBackend):
     }
 
     # Standardowy układ przycisków pada Xbox widziany przez SDL/pygame.
-    BUTTON_MAP = {
-        0: Key.A,
-        1: Key.B,
-        6: Key.MENU,  # Back / View
-        7: Key.START,
-        11: Key.UP,
-        12: Key.DOWN,
-        13: Key.LEFT,
-        14: Key.RIGHT,
-    }
+    BUTTON_MAP = GAMEPAD_BUTTON_MAP
     DEAD_ZONE = 0.45
 
-    def __init__(self) -> None:
-        pygame.joystick.init()
+    def __init__(self, gamepads: bool = True) -> None:
+        self._gamepads_enabled = gamepads
         self._gamepads: dict[int, pygame.joystick.JoystickType] = {}
         self._last_gamepad_states: dict[int, tuple] = {}
-        for index in range(pygame.joystick.get_count()):
-            self._add_gamepad(index)
+        if gamepads:
+            pygame.joystick.init()
+            for index in range(pygame.joystick.get_count()):
+                self._add_gamepad(index)
         self._keyboard_held: set[Key] = set()
         self._controller_buttons: set[Key] = set()
         self._controller_directions: set[Key] = set()
@@ -93,7 +100,7 @@ class KeyboardInput(InputBackend):
                 self._keyboard_held.add(key)
             elif event.type == pygame.KEYUP and event.key in self.KEYMAP:
                 self._keyboard_held.discard(self.KEYMAP[event.key])
-            elif event.type == pygame.JOYDEVICEADDED:
+            elif self._gamepads_enabled and event.type == pygame.JOYDEVICEADDED:
                 self._add_gamepad(event.device_index)
             elif event.type == pygame.JOYDEVICEREMOVED:
                 joystick = self._gamepads.pop(event.instance_id, None)
@@ -224,6 +231,129 @@ class KeyboardInput(InputBackend):
         self._gamepads.clear()
 
 
+class LinuxJoystickDevice:
+    """Bezpośredni czytnik linuksowego interfejsu /dev/input/js* (joydev)."""
+
+    EVENT = struct.Struct("<IhBB")
+    BUTTON = 0x01
+    AXIS = 0x02
+    INIT = 0x80
+
+    def __init__(self, path: Path) -> None:
+        self.path = path
+        self.fd = os.open(str(path), os.O_RDONLY | os.O_NONBLOCK)
+        self.axes: dict[int, float] = {}
+        self.buttons: set[int] = set()
+
+    def poll(self) -> None:
+        while True:
+            try:
+                data = os.read(self.fd, self.EVENT.size)
+            except BlockingIOError:
+                return
+            if len(data) != self.EVENT.size:
+                return
+            _, value, event_type, number = self.EVENT.unpack(data)
+            event_type &= ~self.INIT
+            if event_type == self.BUTTON:
+                if value:
+                    self.buttons.add(number)
+                else:
+                    self.buttons.discard(number)
+            elif event_type == self.AXIS:
+                self.axes[number] = max(-1.0, value / 32767.0)
+
+    def held_keys(self, dead_zone: float) -> set[Key]:
+        held = {key for button, key in GAMEPAD_BUTTON_MAP.items() if button in self.buttons}
+        x, y = self.axes.get(0, 0.0), self.axes.get(1, 0.0)
+        if x <= -dead_zone:
+            held.add(Key.LEFT)
+        elif x >= dead_zone:
+            held.add(Key.RIGHT)
+        if y <= -dead_zone:
+            held.add(Key.UP)
+        elif y >= dead_zone:
+            held.add(Key.DOWN)
+
+        # joydev przedstawia D-pad kontrolerów Xbox jako osie HAT0X/HAT0Y,
+        # zwykle o numerach 6 i 7 po dwóch drążkach i dwóch spustach.
+        dpad_x, dpad_y = self.axes.get(6, 0.0), self.axes.get(7, 0.0)
+        if dpad_x <= -dead_zone:
+            held.add(Key.LEFT)
+        elif dpad_x >= dead_zone:
+            held.add(Key.RIGHT)
+        if dpad_y <= -dead_zone:
+            held.add(Key.UP)
+        elif dpad_y >= dead_zone:
+            held.add(Key.DOWN)
+        return held
+
+    def close(self) -> None:
+        os.close(self.fd)
+
+
+class LinuxJoystickInput(InputBackend):
+    DEAD_ZONE = 0.45
+
+    def __init__(self) -> None:
+        self._devices: dict[Path, LinuxJoystickDevice] = {}
+        self._previous: set[Key] = set()
+        self._menu_since: Optional[float] = None
+        self._last_scan = 0.0
+        self._scan(force=True)
+
+    def poll(self) -> InputFrame:
+        self._scan()
+        held: set[Key] = set()
+        disconnected: list[Path] = []
+        for path, device in self._devices.items():
+            try:
+                device.poll()
+            except OSError as exc:
+                print(f"Błąd odczytu pada {path}: {exc}", flush=True)
+                disconnected.append(path)
+                continue
+            held.update(device.held_keys(self.DEAD_ZONE))
+        for path in disconnected:
+            self._remove(path)
+
+        pressed = held - self._previous
+        self._previous = held
+        now = time.monotonic()
+        if Key.MENU in held:
+            if self._menu_since is None:
+                self._menu_since = now
+            menu_seconds = now - self._menu_since
+        else:
+            self._menu_since = None
+            menu_seconds = 0.0
+        return InputFrame(pressed, held, menu_seconds)
+
+    def _scan(self, force: bool = False) -> None:
+        now = time.monotonic()
+        if not force and now - self._last_scan < 2.0:
+            return
+        self._last_scan = now
+        paths = set(Path("/dev/input").glob("js*"))
+        for path in set(self._devices) - paths:
+            self._remove(path)
+        for path in paths - set(self._devices):
+            try:
+                self._devices[path] = LinuxJoystickDevice(path)
+                print(f"Otworzono pad Linux: {path}", flush=True)
+            except OSError as exc:
+                print(f"Nie można otworzyć pada {path}: {exc}", flush=True)
+
+    def _remove(self, path: Path) -> None:
+        device = self._devices.pop(path, None)
+        if device is not None:
+            device.close()
+
+    def close(self) -> None:
+        for path in list(self._devices):
+            self._remove(path)
+
+
 class CompositeInput(InputBackend):
     def __init__(self, *backends: InputBackend) -> None:
         self.backends = backends
@@ -292,7 +422,7 @@ def create_input() -> InputBackend:
     is_pi = platform.system() == "Linux" and os.path.exists("/proc/device-tree/model")
     if requested == "gpio" or is_pi:
         try:
-            return CompositeInput(GPIOInput(), KeyboardInput())
+            return CompositeInput(GPIOInput(), KeyboardInput(gamepads=False), LinuxJoystickInput())
         except (ImportError, OSError) as exc:
             if requested == "gpio":
                 raise RuntimeError("Nie udało się uruchomić wejścia GPIO") from exc
