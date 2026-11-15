@@ -28,6 +28,9 @@ class FakeGamepad:
     def get_hat(self, index):
         return self.hat
 
+    def get_name(self):
+        return "Test Xbox Controller"
+
 
 def test_xbox_a_button_maps_to_a(monkeypatch) -> None:
     controls = KeyboardInput()

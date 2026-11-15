@@ -39,7 +39,8 @@ W Invaders joystick służy do ruchu w lewo i prawo, a `KEY1` lub kliknięcie
 joysticka wystrzeliwuje pocisk.
 
 Przytrzymanie `KEY3` przez 1,5 sekundy wraca z gry do launchera. W launcherze
-`KEY3` otwiera ekran wyłączenia, a `KEY2` ekran aktualizacji.
+`KEY3` otwiera menu zasilania z opcjami wyłączenia, restartu i powrotu, a
+`KEY2` ekran aktualizacji.
 
 ## Aktualizacja z menu
 
@@ -116,14 +117,15 @@ użytkownika `pi`. Jeżeli system ma inną nazwę użytkownika, trzeba zmienić 
 
 ## Bezpieczne wyłączanie
 
-Instalator usługi pozwala launcherowi uruchamiać wyłącznie jedno polecenie
-administracyjne — `/usr/sbin/poweroff`. Aby wyłączyć konsolę, naciśnij `KEY3`
-w launcherze, a następnie potwierdź przez `KEY1` albo klik joysticka.
+Instalator usługi pozwala launcherowi uruchamiać wyłącznie dwa polecenia
+administracyjne — `/usr/sbin/poweroff` i `/usr/sbin/reboot`. Naciśnij `KEY3`
+w launcherze, wybierz działanie góra/dół, a następnie potwierdź przez `KEY1`
+albo klik joysticka.
 
 Zainstalowana reguła sudoers ma postać:
 
 ```text
-pi ALL=(root) NOPASSWD: /usr/sbin/poweroff
+pi ALL=(root) NOPASSWD: /usr/sbin/poweroff, /usr/sbin/reboot
 ```
 
 Nie odłączaj zasilania, dopóki zielona dioda aktywności karty microSD nie przestanie

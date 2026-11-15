@@ -36,6 +36,7 @@ class ConsoleApp:
         self.running = True
         self.restart_requested = False
         self.selected = 0
+        self.power_selected = 0
         self.games = [
             ("NIBBLES", self.game),
             ("INVADERS", SpaceInvaders()),
@@ -58,10 +59,18 @@ class ConsoleApp:
         if self.screen is Screen.POWER:
             if controls.just_pressed(Key.B) or controls.just_pressed(Key.MENU):
                 self.screen = Screen.LAUNCHER
+            elif controls.just_pressed(Key.UP):
+                self.power_selected = (self.power_selected - 1) % 3
+            elif controls.just_pressed(Key.DOWN):
+                self.power_selected = (self.power_selected + 1) % 3
             elif controls.just_pressed(Key.A) or controls.just_pressed(Key.START):
-                self.running = False
-                if os.getenv("PIKONSOLA_ALLOW_POWEROFF") == "1":
-                    subprocess.Popen(["sudo", "-n", "/usr/sbin/poweroff"])
+                if self.power_selected == 2:
+                    self.screen = Screen.LAUNCHER
+                else:
+                    self.running = False
+                    if os.getenv("PIKONSOLA_ALLOW_POWEROFF") == "1":
+                        command = "/usr/sbin/poweroff" if self.power_selected == 0 else "/usr/sbin/reboot"
+                        subprocess.Popen(["sudo", "-n", command])
             return
 
         if self.screen is Screen.UPDATE_CONFIRM:
@@ -99,6 +108,7 @@ class ConsoleApp:
         elif controls.just_pressed(Key.B):
             self.screen = Screen.UPDATE_CONFIRM
         elif controls.just_pressed(Key.MENU):
+            self.power_selected = 0
             self.screen = Screen.POWER
 
     def _start_update(self) -> None:
@@ -165,10 +175,15 @@ class ConsoleApp:
 
     def _draw_power(self) -> None:
         frame(self.canvas, "ZASILANIE")
-        text(self.canvas, "WYLACZYC", WIDTH // 2, 37, size=12, center=True, bold=True)
-        text(self.canvas, "KONSOLE?", WIDTH // 2, 53, size=12, center=True, bold=True)
-        text(self.canvas, "A: TAK", 15, 87, color=COLORS.danger, size=9, bold=True)
-        text(self.canvas, "B: NIE", 71, 87, color=COLORS.accent, size=9, bold=True)
+        options = ("WYLACZ", "RESTART", "POWROT")
+        for index, label in enumerate(options):
+            y = 31 + index * 22
+            if index == self.power_selected:
+                pygame.draw.rect(self.canvas, COLORS.accent_dark, (17, y - 3, 94, 17))
+                text(self.canvas, ">", 22, y, color=COLORS.food, size=9, bold=True)
+            color = COLORS.danger if index < 2 else COLORS.accent
+            text(self.canvas, label, WIDTH // 2, y, color=color, size=10, center=True, bold=index == self.power_selected)
+        text(self.canvas, "A: OK  B: POWROT", WIDTH // 2, 105, color=COLORS.muted, size=7, center=True)
 
     def _draw_update_confirm(self) -> None:
         frame(self.canvas, "AKTUALIZACJA")

@@ -70,6 +70,7 @@ class KeyboardInput(InputBackend):
     def __init__(self) -> None:
         pygame.joystick.init()
         self._gamepads: dict[int, pygame.joystick.JoystickType] = {}
+        self._last_gamepad_states: dict[int, tuple] = {}
         for index in range(pygame.joystick.get_count()):
             self._add_gamepad(index)
         self._keyboard_held: set[Key] = set()
@@ -96,6 +97,7 @@ class KeyboardInput(InputBackend):
                 self._add_gamepad(event.device_index)
             elif event.type == pygame.JOYDEVICEREMOVED:
                 joystick = self._gamepads.pop(event.instance_id, None)
+                self._last_gamepad_states.pop(event.instance_id, None)
                 if joystick is not None:
                     print(f"Odłączono pad USB: {joystick.get_name()}", flush=True)
             elif event.type == pygame.JOYBUTTONDOWN and event.button in self.BUTTON_MAP:
@@ -146,13 +148,19 @@ class KeyboardInput(InputBackend):
     def _poll_gamepads(self) -> None:
         buttons: set[Key] = set()
         directions: set[Key] = set()
-        for joystick in self._gamepads.values():
+        for instance_id, joystick in self._gamepads.items():
+            axes = tuple(joystick.get_axis(index) for index in range(joystick.get_numaxes()))
+            pressed_buttons = tuple(
+                index for index in range(joystick.get_numbuttons()) if joystick.get_button(index)
+            )
+            hats = tuple(joystick.get_hat(index) for index in range(joystick.get_numhats()))
+
             for button, key in self.BUTTON_MAP.items():
-                if button < joystick.get_numbuttons() and joystick.get_button(button):
+                if button in pressed_buttons:
                     buttons.add(key)
 
-            if joystick.get_numaxes() >= 2:
-                x, y = joystick.get_axis(0), joystick.get_axis(1)
+            if len(axes) >= 2:
+                x, y = axes[0], axes[1]
                 if x <= -self.DEAD_ZONE:
                     directions.add(Key.LEFT)
                 elif x >= self.DEAD_ZONE:
@@ -162,8 +170,7 @@ class KeyboardInput(InputBackend):
                 elif y >= self.DEAD_ZONE:
                     directions.add(Key.DOWN)
 
-            for hat_index in range(joystick.get_numhats()):
-                x, y = joystick.get_hat(hat_index)
+            for x, y in hats:
                 if x < 0:
                     directions.add(Key.LEFT)
                 elif x > 0:
@@ -172,6 +179,17 @@ class KeyboardInput(InputBackend):
                     directions.add(Key.DOWN)
                 elif y > 0:
                     directions.add(Key.UP)
+
+            active_axes = tuple((index, round(value, 1)) for index, value in enumerate(axes) if abs(value) >= 0.35)
+            active_hats = tuple(value for value in hats if value != (0, 0))
+            state = (active_axes, pressed_buttons, active_hats)
+            if any(state) and state != self._last_gamepad_states.get(instance_id):
+                print(
+                    f"Wejscie pada {joystick.get_name()}: "
+                    f"osie={list(active_axes)} przyciski={list(pressed_buttons)} dpad={list(active_hats)}",
+                    flush=True,
+                )
+            self._last_gamepad_states[instance_id] = state
 
         self._controller_buttons = buttons
         self._controller_directions = directions

@@ -1,3 +1,3 @@
-# Pozwala aplikacji piKonsola wyłączyć system bez interaktywnego hasła.
-# Zakres uprawnienia jest ograniczony wyłącznie do /usr/sbin/poweroff.
-pi ALL=(root) NOPASSWD: /usr/sbin/poweroff
+# Pozwala aplikacji piKonsola wyłączyć lub zrestartować system bez hasła.
+# Zakres uprawnienia jest ograniczony do tych dwóch poleceń.
+pi ALL=(root) NOPASSWD: /usr/sbin/poweroff, /usr/sbin/reboot
