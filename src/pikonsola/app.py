@@ -44,7 +44,7 @@ class ConsoleApp:
             elif controls.just_pressed(Key.A) or controls.just_pressed(Key.START):
                 self.running = False
                 if os.getenv("PIKONSOLA_ALLOW_POWEROFF") == "1":
-                    subprocess.Popen(["sudo", "/usr/sbin/poweroff"])
+                    subprocess.Popen(["sudo", "-n", "/usr/sbin/poweroff"])
             return
 
         if controls.just_pressed(Key.UP):

@@ -1,6 +1,7 @@
 [Unit]
 Description=piKonsola
 After=local-fs.target
+Before=network.target
 
 [Service]
 Type=simple
@@ -9,6 +10,7 @@ WorkingDirectory=/home/pi/piKonsola
 Environment=PYTHONPATH=/home/pi/piKonsola/src
 Environment=PIKONSOLA_INPUT=auto
 Environment=PIKONSOLA_DISPLAY=spi
+Environment=PIKONSOLA_ALLOW_POWEROFF=1
 Environment=PYGAME_HIDE_SUPPORT_PROMPT=1
 ExecStart=/usr/bin/python3 -m pikonsola
 Restart=on-failure
@@ -16,5 +18,5 @@ RestartSec=2
 SupplementaryGroups=spi gpio
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=basic.target
 

@@ -72,19 +72,22 @@ PIKONSOLA_DISPLAY=window python3 -m pikonsola
 Po skopiowaniu projektu do `/home/pi/piKonsola`:
 
 ```bash
-sudo cp deploy/pikonsola.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable --now pikonsola.service
+bash deploy/install-service.sh
 ```
 
-Usługa zakłada użytkownika `pi`. Jeżeli system ma inną nazwę użytkownika, trzeba
-zmienić pola `User`, `WorkingDirectory` i `ExecStart` w pliku usługi.
+Instalator włącza autostart na wcześniejszym etapie `basic.target`, instaluje
+ograniczoną regułę bezpiecznego wyłączania i uruchamia usługę ponownie. Zakłada
+użytkownika `pi`. Jeżeli system ma inną nazwę użytkownika, trzeba zmienić pola
+`User`, `WorkingDirectory` i `ExecStart` w usłudze oraz użytkownika w pliku
+`deploy/pikonsola-sudoers`.
 
 ## Bezpieczne wyłączanie
 
-Domyślnie launcher jedynie zamyka program. Aby przycisk mógł wyłączyć cały system,
-ustaw `PIKONSOLA_ALLOW_POWEROFF=1` w usłudze i dodaj precyzyjną regułę sudoers dla
-użytkownika konsoli:
+Instalator usługi pozwala launcherowi uruchamiać wyłącznie jedno polecenie
+administracyjne — `/usr/sbin/poweroff`. Aby wyłączyć konsolę, naciśnij `KEY3`
+w launcherze, a następnie potwierdź przez `KEY1` albo klik joysticka.
+
+Zainstalowana reguła sudoers ma postać:
 
 ```text
 pi ALL=(root) NOPASSWD: /usr/sbin/poweroff

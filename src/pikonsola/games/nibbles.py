@@ -17,7 +17,7 @@ COLS = 19
 ROWS = 16
 ORIGIN_X = 7
 ORIGIN_Y = 25
-STEP_SECONDS = 0.13
+STEP_SECONDS = 0.25
 
 
 class Status(Enum):
