@@ -21,6 +21,20 @@ steruje ruchem, `A` zatwierdza, `B` wraca, `Start` uruchamia grę, a
 `Back`/`View` otwiera menu. Na Raspberry Pi pad działa równolegle z przyciskami
 HAT-a.
 
+Po pierwszym dodaniu obsługi pada trzeba ponownie zainstalować plik usługi, aby
+proces dostał dostęp do grupy urządzeń `input`:
+
+```bash
+cd /home/pi/piKonsola
+bash deploy/install-service.sh
+```
+
+Wykrycie pada można sprawdzić w dzienniku:
+
+```bash
+journalctl -u pikonsola.service -n 30 --no-pager | grep "pad USB"
+```
+
 W Invaders joystick służy do ruchu w lewo i prawo, a `KEY1` lub kliknięcie
 joysticka wystrzeliwuje pocisk.
 

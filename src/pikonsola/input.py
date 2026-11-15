@@ -94,7 +94,9 @@ class KeyboardInput(InputBackend):
             elif event.type == pygame.JOYDEVICEADDED:
                 self._add_gamepad(event.device_index)
             elif event.type == pygame.JOYDEVICEREMOVED:
-                self._gamepads.pop(event.instance_id, None)
+                joystick = self._gamepads.pop(event.instance_id, None)
+                if joystick is not None:
+                    print(f"Odłączono pad USB: {joystick.get_name()}", flush=True)
             elif event.type == pygame.JOYBUTTONDOWN and event.button in self.BUTTON_MAP:
                 key = self.BUTTON_MAP[event.button]
                 if key not in self._controller_buttons:
@@ -127,6 +129,7 @@ class KeyboardInput(InputBackend):
         joystick = pygame.joystick.Joystick(index)
         joystick.init()
         self._gamepads[joystick.get_instance_id()] = joystick
+        print(f"Wykryto pad USB: {joystick.get_name()}", flush=True)
 
     def _set_hat(self, value: tuple[int, int]) -> None:
         x, y = value

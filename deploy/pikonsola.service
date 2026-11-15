@@ -15,7 +15,7 @@ Environment=PYGAME_HIDE_SUPPORT_PROMPT=1
 ExecStart=/usr/bin/python3 -m pikonsola
 Restart=on-failure
 RestartSec=2
-SupplementaryGroups=spi gpio
+SupplementaryGroups=spi gpio input
 
 [Install]
 WantedBy=basic.target
