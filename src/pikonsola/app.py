@@ -15,6 +15,7 @@ from .games.nibbles import Nibbles
 from .games.pacman import Pacman
 from .games.platformer import Platformer
 from .games.river import River
+from .games.snow_arena import SnowArena
 from .games.space_invaders import SpaceInvaders
 from .input import InputBackend, Key, create_input
 from .ui import frame, text
@@ -41,6 +42,7 @@ class ConsoleApp:
         self.power_selected = 0
         self.games = [
             ("PLATFUS", Platformer()),
+            ("SNIEZKA 3D", SnowArena()),
             ("NIBBLES", self.game),
             ("INVADERS", SpaceInvaders()),
             ("PAC-MAN", Pacman()),
@@ -168,9 +170,9 @@ class ConsoleApp:
         frame(self.canvas, "piKONSOLA")
         text(self.canvas, "GRY", 8, 25, color=COLORS.muted, size=8)
         for index, (name, _) in enumerate(self.games):
-            y = 32 + index * 13
+            y = 29 + index * 11
             if index == self.selected:
-                pygame.draw.rect(self.canvas, COLORS.accent_dark, (7, y - 2, 114, 14))
+                pygame.draw.rect(self.canvas, COLORS.accent_dark, (7, y - 1, 114, 11))
                 text(self.canvas, ">", 11, y, color=COLORS.food, size=9, bold=True)
             text(self.canvas, name, 23, y, size=9, bold=index == self.selected)
         text(self.canvas, "KEY2: AKTUALIZACJA", 7, 98, color=COLORS.food, size=7)

@@ -1,0 +1,1 @@
+"""Mapy zimowej strzelanki SNIEZKA."""

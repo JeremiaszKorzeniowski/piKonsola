@@ -3,7 +3,8 @@
 Minimalna konsola retro dla Raspberry Pi Zero W i ekranu Waveshare 1.44" LCD HAT
 (ST7735S, 128x128). Konsola zawiera launcher oraz gry **Nibbles**,
 **Invaders** (klon klasycznego Space Invaders), **Pac-Man** i spokojna gra
-**River** inspirowana River Raid oraz **Platfus** — prosta platformówka.
+**River** inspirowana River Raid, **Platfus** — prosta platformówka oraz
+**Śnieżka 3D** — zimowa strzelanka FPP w stylu Wolfenstein 3D.
 Na Raspberry Pi obraz jest wysyłany bezpośrednio do LCD przez SPI — projekt nie
 wymaga starego sterownika `fbcp` ani środowiska graficznego.
 
@@ -49,6 +50,12 @@ omiń kolce i przeciwników, a potem dotrzyj
 do drzwi. Masz trzy życia. Poziomy znajdują się jako osobne pliki w katalogu
 `src/pikonsola/games/platformer_levels`; plik o nazwie `level_*.py` jest
 automatycznie dodawany do gry.
+
+W Śnieżce 3D góra/dół porusza postacią, lewo/prawo obraca widok, a `KEY1`
+lub kliknięcie joysticka rzuca śnieżką. Na arenie zawsze grasuje dwóch
+przeciwników; po trafieniu jednego pojawia się następny. Bałwany, igloo i sanki
+są przeszkodami. Walka trwa aż pięć trafień skuje gracza. Mapy aren znajdują
+się w `src/pikonsola/games/snow_arena_levels`.
 
 Przytrzymanie `KEY3` przez 1,5 sekundy wraca z gry do launchera. W launcherze
 `KEY3` otwiera menu zasilania z opcjami wyłączenia, restartu i powrotu, a
