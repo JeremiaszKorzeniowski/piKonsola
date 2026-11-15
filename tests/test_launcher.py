@@ -1,0 +1,52 @@
+import pygame
+
+from pikonsola.app import LAUNCHER_VISIBLE_GAMES, ConsoleApp
+from pikonsola.input import InputFrame, Key
+
+
+class Controls:
+    def __init__(self) -> None:
+        self.frame = InputFrame()
+
+    def poll(self) -> InputFrame:
+        frame = self.frame
+        self.frame = InputFrame()
+        return frame
+
+    def press(self, key: Key) -> None:
+        self.frame = InputFrame(pressed={key}, held={key})
+
+    def close(self) -> None:
+        pass
+
+
+def test_launcher_scrolls_window_to_keep_selection_visible() -> None:
+    app = ConsoleApp(Controls())
+    app.games.extend((f"GRA {number}", object()) for number in range(4))
+
+    assert app._launcher_window_start() == 0
+
+    app.selected = LAUNCHER_VISIBLE_GAMES
+    assert app._launcher_window_start() == 1
+
+    app.selected = len(app.games) - 1
+    assert app._launcher_window_start() == len(app.games) - LAUNCHER_VISIBLE_GAMES
+
+
+def test_launcher_draws_only_visible_games(monkeypatch) -> None:
+    pygame.font.init()
+    app = ConsoleApp(Controls())
+    app.games.extend((f"GRA {number}", object()) for number in range(4))
+    app.selected = len(app.games) - 1
+    drawn_game_names = []
+    game_names = {name for name, _ in app.games}
+
+    def record_text(_surface, value, _x, y, **_kwargs):
+        if y in {31, 47, 63, 79} and value in game_names:
+            drawn_game_names.append(value)
+
+    monkeypatch.setattr("pikonsola.app.text", record_text)
+    app._draw_launcher()
+
+    assert len(drawn_game_names) == LAUNCHER_VISIBLE_GAMES
+    assert drawn_game_names[-1] == app.games[-1][0]

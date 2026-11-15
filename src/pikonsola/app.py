@@ -21,6 +21,9 @@ from .input import InputBackend, Key, create_input
 from .ui import frame, text
 
 
+LAUNCHER_VISIBLE_GAMES = 4
+
+
 class Screen(Enum):
     LAUNCHER = auto()
     GAME = auto()
@@ -167,17 +170,35 @@ class ConsoleApp:
         return self.canvas
 
     def _draw_launcher(self) -> None:
-        frame(self.canvas, "piKONSOLA")
-        text(self.canvas, "GRY", 8, 25, color=COLORS.muted, size=8)
-        for index, (name, _) in enumerate(self.games):
-            y = 29 + index * 11
-            if index == self.selected:
-                pygame.draw.rect(self.canvas, COLORS.accent_dark, (7, y - 1, 114, 11))
-                text(self.canvas, ">", 11, y, color=COLORS.food, size=9, bold=True)
-            text(self.canvas, name, 23, y, size=9, bold=index == self.selected)
-        text(self.canvas, "KEY2: AKTUALIZACJA", 7, 98, color=COLORS.food, size=7)
-        text(self.canvas, "A: GRAJ", 7, 107, color=COLORS.accent, size=8)
-        text(self.canvas, "MENU: OFF", 69, 107, color=COLORS.muted, size=7)
+        frame(self.canvas, "piKONSOLA", title_size=11)
+        text(self.canvas, "GRY", 8, 23, color=COLORS.muted, size=8)
+        first = self._launcher_window_start()
+        visible_games = self.games[first : first + LAUNCHER_VISIBLE_GAMES]
+        for row, (name, _) in enumerate(visible_games):
+            index = first + row
+            y = 31 + row * 16
+            selected = index == self.selected
+            if selected:
+                pygame.draw.rect(self.canvas, COLORS.accent_dark, (7, y - 1, 114, 15))
+                text(self.canvas, ">", 11, y, color=COLORS.food, size=12, bold=True)
+            text(self.canvas, name, 23, y, size=12 if selected else 11, bold=selected)
+        if first > 0:
+            pygame.draw.polygon(self.canvas, COLORS.muted, ((115, 27), (119, 27), (117, 23)))
+        if first + LAUNCHER_VISIBLE_GAMES < len(self.games):
+            pygame.draw.polygon(self.canvas, COLORS.muted, ((115, 91), (119, 91), (117, 95)))
+        text(self.canvas, "KEY2: AKTUALIZACJA", 7, 97, color=COLORS.food, size=8)
+        text(self.canvas, "A: GRAJ", 7, 106, color=COLORS.accent, size=9)
+        text(self.canvas, "MENU: OFF", 69, 106, color=COLORS.muted, size=9)
+
+    def _launcher_window_start(self) -> int:
+        """Keep the selected game visible without compressing the menu rows."""
+        return max(
+            0,
+            min(
+                self.selected - LAUNCHER_VISIBLE_GAMES + 1,
+                len(self.games) - LAUNCHER_VISIBLE_GAMES,
+            ),
+        )
 
     def _draw_power(self) -> None:
         frame(self.canvas, "ZASILANIE")

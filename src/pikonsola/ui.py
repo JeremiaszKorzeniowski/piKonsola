@@ -33,9 +33,9 @@ def text(
     return rect
 
 
-def frame(surface: pygame.Surface, title: str) -> None:
+def frame(surface: pygame.Surface, title: str, *, title_size: int = 9) -> None:
     surface.fill(COLORS.background)
     pygame.draw.rect(surface, COLORS.panel, (3, 3, WIDTH - 6, HEIGHT - 6), 1)
     pygame.draw.line(surface, COLORS.accent_dark, (4, 18), (WIDTH - 5, 18))
-    text(surface, title, WIDTH // 2, 5, color=COLORS.accent, size=9, center=True, bold=True)
+    text(surface, title, WIDTH // 2, 5, color=COLORS.accent, size=title_size, center=True, bold=True)
 
