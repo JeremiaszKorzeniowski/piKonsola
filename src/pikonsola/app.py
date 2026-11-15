@@ -25,11 +25,12 @@ from .games.sokoban import Sokoban
 from .games.space_invaders import SpaceInvaders
 from .games.tanks import Tanks
 from .games.tetris import Tetris
-from .input import InputBackend, Key, create_input
+from .input import InputBackend, InputFrame, Key, create_input
 from .ui import frame, text
 
 
 LAUNCHER_VISIBLE_GAMES = 4
+COLOR_MODE_HOLD_SECONDS = 5.0
 
 
 class Screen(Enum):
@@ -52,6 +53,8 @@ class ConsoleApp:
         self.selected = 0
         self.power_selected = 0
         self.color_mode = "night"
+        self.key2_held_seconds = 0.0
+        self.key2_hold_triggered = False
         set_color_mode(self.color_mode)
         self.games = sorted(
             [
@@ -79,6 +82,7 @@ class ConsoleApp:
 
     def update(self, dt: float) -> None:
         controls = self.controls.poll()
+        self._update_color_mode_shortcut(dt, controls)
         if self.screen is Screen.GAME:
             if controls.menu_held_seconds >= 1.5:
                 self.screen = Screen.LAUNCHER
@@ -137,12 +141,22 @@ class ConsoleApp:
         if controls.just_pressed(Key.A) or controls.just_pressed(Key.START):
             self.game = self.games[self.selected][1]
             self.screen = Screen.GAME
-        elif controls.just_pressed(Key.B):
-            self.color_mode = "day" if self.color_mode == "night" else "night"
-            set_color_mode(self.color_mode)
         elif controls.just_pressed(Key.MENU):
             self.power_selected = 0
             self.screen = Screen.POWER
+
+    def _update_color_mode_shortcut(self, dt: float, controls: InputFrame) -> None:
+        if not controls.is_held(Key.B):
+            self.key2_held_seconds = 0.0
+            self.key2_hold_triggered = False
+            return
+        if self.key2_hold_triggered:
+            return
+        self.key2_held_seconds += dt
+        if self.key2_held_seconds >= COLOR_MODE_HOLD_SECONDS:
+            self.color_mode = "day" if self.color_mode == "night" else "night"
+            set_color_mode(self.color_mode)
+            self.key2_hold_triggered = True
 
     def _start_update(self) -> None:
         project_dir = Path(__file__).resolve().parents[2]
@@ -211,7 +225,7 @@ class ConsoleApp:
         if first + LAUNCHER_VISIBLE_GAMES < len(self.games):
             pygame.draw.polygon(self.canvas, COLORS.muted, ((115, 91), (119, 91), (117, 95)))
         next_mode = "DZIEN" if self.color_mode == "night" else "NOC"
-        text(self.canvas, f"KEY2: TRYB {next_mode}", 7, 97, color=COLORS.food, size=8)
+        text(self.canvas, f"KEY2 5S: {next_mode}", 7, 97, color=COLORS.food, size=8)
         text(self.canvas, "A: GRAJ", 7, 106, color=COLORS.accent, size=9)
         text(self.canvas, "KEY3: MENU", 69, 106, color=COLORS.muted, size=9)
 

@@ -36,8 +36,9 @@ Launcher wyświetla gry alfabetycznie. Obecnie dostępne są:
 | KEY3 | Escape | Back / View | menu konsoli |
 
 Pad USB działa równolegle z przyciskami HAT-a. Przytrzymanie `KEY3` przez
-1,5 sekundy wraca z gry do launchera. W launcherze `KEY2` przełącza tryb
-dzienny/nocny, a `KEY3` otwiera menu konsoli.
+1,5 sekundy wraca z gry do launchera. Przytrzymanie `KEY2` przez 5 sekund
+przełącza tryb dzienny/nocny z dowolnego ekranu, a `KEY3` w launcherze otwiera
+menu konsoli. Krótkie naciśnięcie `KEY2` zachowuje swoją funkcję w grach i menu.
 
 ### Sterowanie w grach
 

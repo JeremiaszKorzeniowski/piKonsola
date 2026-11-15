@@ -1,6 +1,6 @@
 import pygame
 
-from pikonsola.app import LAUNCHER_VISIBLE_GAMES, ConsoleApp
+from pikonsola.app import LAUNCHER_VISIBLE_GAMES, ConsoleApp, Screen
 from pikonsola.config import COLORS, DAY_PALETTE, NIGHT_PALETTE
 from pikonsola.input import InputFrame, Key
 
@@ -61,16 +61,29 @@ def test_launcher_draws_only_visible_games(monkeypatch) -> None:
     assert drawn_game_names[-1] == app.games[-1][0]
 
 
-def test_key2_toggles_day_and_night_modes() -> None:
+def test_holding_key2_toggles_day_and_night_modes_on_any_screen() -> None:
     controls = Controls()
     app = ConsoleApp(controls)
+    app.screen = Screen.POWER
 
-    controls.press(Key.B)
-    app.update(0.01)
+    for _ in range(49):
+        controls.frame = InputFrame(held={Key.B})
+        app.update(0.1)
+    assert app.color_mode == "night"
+
+    controls.frame = InputFrame(held={Key.B})
+    app.update(0.2)
     assert app.color_mode == "day"
     assert COLORS.background == DAY_PALETTE.background
 
-    controls.press(Key.B)
-    app.update(0.01)
+    for _ in range(60):
+        controls.frame = InputFrame(held={Key.B})
+        app.update(0.1)
+    assert app.color_mode == "day"
+
+    app.update(0.1)
+    for _ in range(51):
+        controls.frame = InputFrame(held={Key.B})
+        app.update(0.1)
     assert app.color_mode == "night"
     assert COLORS.background == NIGHT_PALETTE.background
