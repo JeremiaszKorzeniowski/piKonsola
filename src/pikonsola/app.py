@@ -19,6 +19,7 @@ from .games.snow_arena import SnowArena
 from .games.sokoban import Sokoban
 from .games.space_invaders import SpaceInvaders
 from .games.tanks import Tanks
+from .games.tetris import Tetris
 from .input import InputBackend, Key, create_input
 from .ui import frame, text
 
@@ -54,6 +55,7 @@ class ConsoleApp:
             ("PAC-MAN", Pacman()),
             ("RIVER", River()),
             ("CZOLGI", Tanks()),
+            ("TETRIS", Tetris()),
         ]
         self.update_process: Optional[subprocess.Popen] = None
         self.update_elapsed = 0.0

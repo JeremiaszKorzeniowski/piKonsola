@@ -7,6 +7,8 @@ Minimalna konsola retro dla Raspberry Pi Zero W i ekranu Waveshare 1.44" LCD HAT
 **Platfus** — prosta platformówka oraz
 **Śnieżka 3D** — zimowa strzelanka FPP w stylu Wolfenstein 3D.
 W **Czołgach** bronisz bazy w uproszczonej grze inspirowanej Battle City.
+**Tetris** oferuje klasyczną planszę 10×20, siedem rodzajów klocków, kolejne
+poziomy i podgląd następnego elementu.
 Na Raspberry Pi obraz jest wysyłany bezpośrednio do LCD przez SPI — projekt nie
 wymaga starego sterownika `fbcp` ani środowiska graficznego.
 
@@ -46,6 +48,10 @@ W Czołgach joystick porusza pojazdem w czterech kierunkach, a `KEY1` lub
 kliknięcie joysticka strzela w kierunku jazdy. Zniszcz trzy czerwone czołgi,
 zanim przeciwnicy trafią gracza trzy razy albo zniszczą zieloną bazę. Ceglane
 ściany można rozbić pociskiem, a szare bloki są niezniszczalne.
+
+W Tetrisie joystick w lewo i prawo przesuwa klocek, w dół przyspiesza jego
+opadanie, a w górę lub `KEY1` obraca. `KEY2` wykonuje natychmiastowy twardy
+zrzut. Pełne linie znikają, a co dziesięć linii rośnie poziom i prędkość gry.
 
 W Sokobanie joystick przesuwa magazyniera o jedno pole. Popchnij wszystkie
 skrzynie na żółte cele; skrzyń nie można ciągnąć. `KEY2` resetuje bieżącą
