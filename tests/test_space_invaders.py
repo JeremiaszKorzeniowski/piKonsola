@@ -29,6 +29,17 @@ def test_player_can_shoot() -> None:
     assert len(game.player_bullets) == 1
 
 
+def test_invaders_start_as_three_rows_of_four_and_move_sideways() -> None:
+    game = SpaceInvaders(seed=1)
+    assert len(game.invaders) == 12
+    assert [sum(invader.row == row for invader in game.invaders) for row in range(3)] == [4, 4, 4]
+    game.update(0, press(Key.A))
+    initial_positions = [(invader.x, invader.y) for invader in game.invaders]
+    game.update(1.0, InputFrame())
+    assert all(invader.x > x for invader, (x, _) in zip(game.invaders, initial_positions))
+    assert all(invader.y == y for invader, (_, y) in zip(game.invaders, initial_positions))
+
+
 def test_bullet_destroys_invader_and_scores() -> None:
     game = SpaceInvaders(seed=1)
     game.update(0, press(Key.A))

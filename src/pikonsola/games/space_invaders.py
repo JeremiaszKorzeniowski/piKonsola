@@ -62,9 +62,9 @@ class SpaceInvaders:
     def reset(self) -> None:
         self.player_x = float((WIDTH - PLAYER_WIDTH) // 2)
         self.invaders = [
-            Invader(10 + column * 21, 28 + row * 13, row)
+            Invader(26 + column * 21, 28 + row * 13, row)
             for row in range(3)
-            for column in range(6)
+            for column in range(4)
         ]
         self.player_bullets: list[Bullet] = []
         self.enemy_bullets: list[Bullet] = []
@@ -107,7 +107,7 @@ class SpaceInvaders:
         alive = [invader for invader in self.invaders if invader.alive]
         if not alive:
             return
-        speed = 10.0 + (len(self.invaders) - len(alive)) * 0.7
+        speed = 2.5 + (len(self.invaders) - len(alive)) * 0.175
         shift = self.invader_direction * speed * dt
         left = min(invader.x for invader in alive) + shift
         right = max(invader.x + INVADER_WIDTH for invader in alive) + shift
@@ -134,7 +134,7 @@ class SpaceInvaders:
         columns: dict[int, Invader] = {}
         for invader in self.invaders:
             if invader.alive:
-                column = round((invader.x - 10) / 21)
+                column = round((invader.x - 26) / 21)
                 if column not in columns or invader.y > columns[column].y:
                     columns[column] = invader
         if columns:
