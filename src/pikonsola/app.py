@@ -11,6 +11,7 @@ import pygame
 
 from .config import COLORS, FPS, HEIGHT, WIDTH
 from .display import create_display, selected_display
+from .games.arkanoid import Arkanoid
 from .games.asteroids import Asteroids
 from .games.nibbles import Nibbles
 from .games.pacman import Pacman
@@ -58,6 +59,7 @@ class ConsoleApp:
             ("RIVER", River()),
             ("CZOLGI", Tanks()),
             ("TETRIS", Tetris()),
+            ("ARKANOID", Arkanoid()),
         ]
         self.update_process: Optional[subprocess.Popen] = None
         self.update_elapsed = 0.0
