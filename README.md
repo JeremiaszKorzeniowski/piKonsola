@@ -33,10 +33,11 @@ Launcher wyświetla gry alfabetycznie. Obecnie dostępne są:
 | wciśnięcie joysticka | Enter | Start | start lub zatwierdzenie |
 | KEY1 | Z | A | główna akcja |
 | KEY2 | X | B | druga akcja lub powrót |
-| KEY3 | Escape | Back / View | menu konsoli |
+| KEY3 | Escape | Back / View | pauza / menu konsoli |
 
-Pad USB działa równolegle z przyciskami HAT-a. Przytrzymanie `KEY3` przez
-1,5 sekundy wraca z gry do launchera. Przytrzymanie `KEY2` przez 5 sekund
+Pad USB działa równolegle z przyciskami HAT-a. Krótkie naciśnięcie `KEY3`
+wstrzymuje lub wznawia dowolną grę, a przytrzymanie go przez 1,5 sekundy wraca
+z gry do launchera. Przytrzymanie `KEY2` przez 5 sekund
 przełącza tryb dzienny/nocny z dowolnego ekranu, a `KEY3` w launcherze otwiera
 menu konsoli. Krótkie naciśnięcie `KEY2` zachowuje swoją funkcję w grach i menu.
 

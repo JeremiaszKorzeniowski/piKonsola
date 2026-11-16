@@ -48,6 +48,7 @@ class ConsoleApp:
         self.canvas = pygame.Surface((WIDTH, HEIGHT))
         self.screen = Screen.LAUNCHER
         self.game = Nibbles()
+        self.game_paused = False
         self.running = True
         self.restart_requested = False
         self.selected = 0
@@ -85,8 +86,11 @@ class ConsoleApp:
         self._update_color_mode_shortcut(dt, controls)
         if self.screen is Screen.GAME:
             if controls.menu_held_seconds >= 1.5:
+                self.game_paused = False
                 self.screen = Screen.LAUNCHER
-            else:
+            elif controls.just_pressed(Key.MENU):
+                self.game_paused = not self.game_paused
+            elif not self.game_paused:
                 self.game.update(dt, controls)
             return
 
@@ -140,6 +144,7 @@ class ConsoleApp:
             self.selected = (self.selected + 1) % len(self.games)
         if controls.just_pressed(Key.A) or controls.just_pressed(Key.START):
             self.game = self.games[self.selected][1]
+            self.game_paused = False
             self.screen = Screen.GAME
         elif controls.just_pressed(Key.MENU):
             self.power_selected = 0
@@ -195,6 +200,8 @@ class ConsoleApp:
     def draw(self) -> pygame.Surface:
         if self.screen is Screen.GAME:
             self.game.draw(self.canvas)
+            if self.game_paused:
+                self._draw_pause()
         elif self.screen is Screen.POWER:
             self._draw_power()
         elif self.screen is Screen.UPDATE_CONFIRM:
@@ -206,6 +213,13 @@ class ConsoleApp:
         else:
             self._draw_launcher()
         return self.canvas
+
+    def _draw_pause(self) -> None:
+        pygame.draw.rect(self.canvas, COLORS.background, (13, 35, 102, 58))
+        pygame.draw.rect(self.canvas, COLORS.accent, (13, 35, 102, 58), 1)
+        text(self.canvas, "PAUZA", WIDTH // 2, 42, color=COLORS.food, size=14, center=True, bold=True)
+        text(self.canvas, "KEY3: WZNOW", WIDTH // 2, 64, color=COLORS.text, size=8, center=True)
+        text(self.canvas, "TRZYMAJ 1,5S: MENU", WIDTH // 2, 78, color=COLORS.muted, size=7, center=True)
 
     def _draw_launcher(self) -> None:
         frame(self.canvas, "piKONSOLA", title_size=11)

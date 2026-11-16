@@ -87,3 +87,40 @@ def test_holding_key2_toggles_day_and_night_modes_on_any_screen() -> None:
         app.update(0.1)
     assert app.color_mode == "night"
     assert COLORS.background == NIGHT_PALETTE.background
+
+
+def test_key3_pauses_and_resumes_game() -> None:
+    controls = Controls()
+    app = ConsoleApp(controls)
+    app.screen = Screen.GAME
+    updates = []
+    app.game.update = lambda dt, frame: updates.append((dt, frame))
+
+    controls.press(Key.MENU)
+    app.update(0.1)
+    assert app.game_paused
+    assert updates == []
+
+    app.update(0.1)
+    assert updates == []
+
+    controls.press(Key.MENU)
+    app.update(0.1)
+    assert not app.game_paused
+    assert updates == []
+
+    app.update(0.1)
+    assert len(updates) == 1
+
+
+def test_holding_key3_exits_paused_game_to_launcher() -> None:
+    controls = Controls()
+    app = ConsoleApp(controls)
+    app.screen = Screen.GAME
+    app.game_paused = True
+    controls.frame = InputFrame(held={Key.MENU}, menu_held_seconds=1.5)
+
+    app.update(0.1)
+
+    assert app.screen is Screen.LAUNCHER
+    assert not app.game_paused
